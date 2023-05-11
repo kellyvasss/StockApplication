@@ -2,6 +2,10 @@ package api;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import org.json.JSONObject;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 
 
 import java.io.IOException;
@@ -29,9 +33,19 @@ public class AlphaVantage {
                 .url(url)
                 .get()
                 .build();
+        // Nu funkar denna metoden. Jag behöver bara lägga till vad jag vill få fram, ex jsonNode.get("Currency").asText(), osv.
         try (Response response = client.newCall(request).execute()) {
             if (response.isSuccessful()) {
-                return response.body().toString();
+                String json =  response.body().string();
+
+
+
+                ObjectMapper objectMapper = new ObjectMapper();
+
+                JsonNode jsonNode = objectMapper.readTree(json);
+
+
+                return jsonNode.get("Sector").asText();
             } else {
                 throw new IOException("Wrong symbol");
             }
