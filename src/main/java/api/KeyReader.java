@@ -13,14 +13,14 @@ public class KeyReader {
 
         try {
             FileInputStream input = new FileInputStream(
-                    user + "/OneDrive/Dokument/Keys/" + textfile + ".txt");
+                    user + "/OneDrive/Dokument/APIKeys/" + textfile + ".txt");
             properties.load(input);
         } catch (Exception e) {
             // Sökvägen är fel
         }
     }
     public String getAPIKey() {
-        return properties.getProperty("apiKey");
+        return properties.getProperty("ApiKey");
     }
 
 }
