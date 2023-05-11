@@ -9,6 +9,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class AlphaVantage {
     private String key = "";
@@ -45,7 +47,7 @@ public class AlphaVantage {
                 JsonNode jsonNode = objectMapper.readTree(json);
 
 
-                return jsonNode.get("Sector").asText();
+                return jsonNode.get("Sector").asText() + "\n" + jsonNode.get("Description").asText();
             } else {
                 throw new IOException("Wrong symbol");
             }
@@ -53,6 +55,7 @@ public class AlphaVantage {
             return null;
         }
     }
+
     public String quote(String symbol) {
         // Denna visar information om senaste försäljningspriset, open, high, low, antal aktier handlade, förändring
         // i pris i pengar och procent jämnfört med förgående dag.
@@ -102,6 +105,76 @@ public class AlphaVantage {
 
                 // ändra detta
                 return jsonNode.get("Sector").asText();
+            } else {
+                throw new IOException("Wrong symbol");
+            }
+        } catch (IOException e) {
+            return null;
+        }
+    }
+    public List<String> searchEndpoint(String keyword) {
+        String function = "SYMBOL_SEARCH";
+        String url = base_url + function + "&keywords=" + keyword + "&apikey=" + key;
+
+        Request request = new Request.Builder()
+                .url(url)
+                .get()
+                .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            if (response.isSuccessful()) {
+                String json = response.body().string();
+
+                ObjectMapper objectMapper = new ObjectMapper();
+                JsonNode jsonNode = objectMapper.readTree(json);
+
+                List<String> names = new ArrayList<>();
+
+                JsonNode matchesNode = jsonNode.get("bestMatches");
+                for (JsonNode matchNode : matchesNode) {
+                    JsonNode nameNode = matchNode.get("2. name");
+                    if (nameNode != null && !nameNode.isNull()) {
+                        String name = nameNode.asText();
+                        names.add(name);
+                    }
+                }
+
+                return names;
+            } else {
+                throw new IOException("Wrong symbol");
+            }
+        } catch (IOException e) {
+            return null;
+        }
+    }
+    public List<String> showMarketStatus() {
+        String function = "MARKET_STATUS";
+        String url = base_url + function + "&apikey=" + key;
+
+        Request request = new Request.Builder()
+                .url(url)
+                .get()
+                .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            if (response.isSuccessful()) {
+                String json = response.body().string();
+
+                ObjectMapper objectMapper = new ObjectMapper();
+                JsonNode jsonNode = objectMapper.readTree(json);
+
+                List<String> names = new ArrayList<>();
+
+                JsonNode matchesNode = jsonNode.get("markets");
+                for (JsonNode matchNode : matchesNode) {
+                    JsonNode nameNode = matchNode.get("region");
+                    if (nameNode != null && !nameNode.isNull()) {
+                        String name = nameNode.asText();
+                        names.add(name);
+                    }
+                }
+
+                return names;
             } else {
                 throw new IOException("Wrong symbol");
             }

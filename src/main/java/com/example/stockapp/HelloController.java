@@ -24,6 +24,7 @@ public class HelloController {
 
         welcomeText.setText("Welcome to JavaFX Application!");
 
-        result.setText(alphaVantage.companyOverview("IBM"));
+        result.setText(alphaVantage.searchEndpoint("apple").toString());
+
     }
 }
