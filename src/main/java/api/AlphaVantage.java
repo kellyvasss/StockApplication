@@ -53,6 +53,62 @@ public class AlphaVantage {
             return null;
         }
     }
+    public String quote(String symbol) {
+        // Denna visar information om senaste försäljningspriset, open, high, low, antal aktier handlade, förändring
+        // i pris i pengar och procent jämnfört med förgående dag.
+        String function = "GLOBAL_QUOTE";
+        String url = base_url + function + "&symbol=" + symbol + "&apikey=" + key;
+
+        Request request = new Request.Builder()
+                .url(url)
+                .get()
+                .build();
+        // Nu funkar denna metoden. Jag behöver bara lägga till vad jag vill få fram, ex jsonNode.get("Currency").asText(), osv.
+        try (Response response = client.newCall(request).execute()) {
+            if (response.isSuccessful()) {
+                String json =  response.body().string();
+
+                ObjectMapper objectMapper = new ObjectMapper();
+
+                JsonNode jsonNode = objectMapper.readTree(json);
+
+                // ändra detta
+                return jsonNode.get("Sector").asText();
+            } else {
+                throw new IOException("Wrong symbol");
+            }
+        } catch (IOException e) {
+            return null;
+        }
+    }
+    public String timeSeriesDaily(String symbol) {
+        // Denna visar information om försäljningspriset, open, high, low, antal aktier handlade, förändring
+        // för så lång till tillbaka det sträcker sig. Resultat är dagligt uppdaterad
+        String function = "TIME_SERIES_DAILY_ADJUSTED";
+        String url = base_url + function + "&symbol=" + symbol + "&apikey=" + key;
+
+        Request request = new Request.Builder()
+                .url(url)
+                .get()
+                .build();
+        // Nu funkar denna metoden. Jag behöver bara lägga till vad jag vill få fram, ex jsonNode.get("Currency").asText(), osv.
+        try (Response response = client.newCall(request).execute()) {
+            if (response.isSuccessful()) {
+                String json =  response.body().string();
+
+                ObjectMapper objectMapper = new ObjectMapper();
+
+                JsonNode jsonNode = objectMapper.readTree(json);
+
+                // ändra detta
+                return jsonNode.get("Sector").asText();
+            } else {
+                throw new IOException("Wrong symbol");
+            }
+        } catch (IOException e) {
+            return null;
+        }
+    }
 
 
 }
