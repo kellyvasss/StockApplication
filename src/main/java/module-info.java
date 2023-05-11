@@ -4,6 +4,7 @@ module com.example.stockapp {
     requires okhttp3;
     requires org.json;
     requires com.fasterxml.jackson.databind;
+    requires java.sql;
 
     opens com.example.stockapp to javafx.fxml;
     exports com.example.stockapp;
