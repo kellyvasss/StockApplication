@@ -6,31 +6,37 @@ import java.sql.Statement;
 
 public class MySQL {
 
-    public void main() {
-        String url = "jdbc:mysql://localhost:3306/";
-        String username = "root";
-        String password = "your_password";
-        String databaseName = "your_database";
+    Connection connection = null;
+    String url = "jdbc:mysql://127.0.0.1:3306/?user=";
 
-        try (Connection connection = DriverManager.getConnection(url, username, password);
-             Statement statement = connection.createStatement()) {
-            // Skapa databas
-            String createDatabaseQuery = "CREATE DATABASE " + databaseName;
-            statement.executeUpdate(createDatabaseQuery);
-            System.out.println("Databasen " + databaseName + " skapades.");
+    String username = "";
+    //String password ;
+   // String dbName = "";
 
-            // Använd den nya databasen
-            String useDatabaseQuery = "USE " + databaseName;
-            statement.executeUpdate(useDatabaseQuery);
-            System.out.println("Använder databasen " + databaseName + ".");
+    public MySQL(String username, String password) {
 
-            // Annan kod för att utföra önskade operationer på databasen
+        this.username = username;
+        String passwordd = "&password=" + password;
+
+        try {
+
+            connection = DriverManager.getConnection(url + username + passwordd);
+            Statement statement = connection.createStatement();
+            statement.executeUpdate("CREATE DATABASE IF NOT EXISTS mydatabase");
+            System.out.println("Anslutning etablerad och databas skapad");
+            System.out.println(url + username + password);
+            //Statement statement = connection.createStatement();
+           // connection.createStatement().execute("SELECT * FROM sql_store;");
+           // String sql = "CREATE DATABASE test";
+            //statement.executeUpdate(sql);
+            System.out.println("HEJ det funkar");
+            connection.close();
 
         } catch (SQLException e) {
-            e.printStackTrace();
+            e.getMessage();
+            System.out.println(url + username + password);
+            System.out.println(e.getMessage());
         }
     }
-
-
 
 }
