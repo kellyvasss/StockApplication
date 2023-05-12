@@ -18,7 +18,7 @@ public class HelloController {
     public HelloController() {
         keyReader = new KeyReader("Alpha");
         alphaVantage = new AlphaVantage(keyReader.getAPIKey());
-        mySQL = new MySQL("root", "sup3rFeet18");
+        mySQL = new MySQL("root", "&password=***");
     }
 
     @FXML

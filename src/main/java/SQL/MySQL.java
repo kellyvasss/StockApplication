@@ -16,14 +16,14 @@ public class MySQL {
     public MySQL(String username, String password) {
 
         this.username = username;
-        String passwordd = "&password=" + password;
+        String passwordd = "" + password;
 
         try {
 
             connection = DriverManager.getConnection(url + username + passwordd);
-            Statement statement = connection.createStatement();
-            statement.executeUpdate("CREATE DATABASE IF NOT EXISTS mydatabase");
-            System.out.println("Anslutning etablerad och databas skapad");
+           // Statement statement = connection.createStatement();
+           // statement.executeUpdate("CREATE DATABASE IF NOT EXISTS mydatabase");
+            //System.out.println("Anslutning etablerad och databas skapad");
             System.out.println(url + username + password);
             //Statement statement = connection.createStatement();
            // connection.createStatement().execute("SELECT * FROM sql_store;");
