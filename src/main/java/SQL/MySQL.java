@@ -1,13 +1,11 @@
 package SQL;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 
 public class MySQL {
 
     Connection connection = null;
     String url = "jdbc:mysql://127.0.0.1:3306/?user=";
+
 
     String username = "";
     //String password ;
@@ -16,11 +14,11 @@ public class MySQL {
     public MySQL(String username, String password) {
 
         this.username = username;
-        String passwordd = "" + password;
+        String passwordd = "&password=" + password;
 
         try {
 
-            connection = DriverManager.getConnection(url + username + passwordd);
+            connection = DriverManager.getConnection(url , "newuser" , "roott");
            // Statement statement = connection.createStatement();
            // statement.executeUpdate("CREATE DATABASE IF NOT EXISTS mydatabase");
             //System.out.println("Anslutning etablerad och databas skapad");
@@ -34,8 +32,20 @@ public class MySQL {
 
         } catch (SQLException e) {
             e.getMessage();
-            System.out.println(url + username + password);
+            //System.out.println(url + username + "sup3rFeet18");
             System.out.println(e.getMessage());
+        }
+    }
+    public void createTable() {
+
+    }
+    public void insertUser(User user) {
+
+        try {
+            PreparedStatement pstm = connection.prepareStatement(
+                    "INSERT INTO user (person_number, password, email) VALUES (?, ?, ?)");
+            pstm.setString(1, user.getNumber());
+            pstm.setString(2, user.getPassword());
         }
     }
 
