@@ -35,9 +35,44 @@ public class SQLite {
                 + "symbol VARCHAR(6),\n"
                 + "name VARCHAR(50),\n"
                 + "description TEXT,\n"
-                + "market VARCHAR(30),\n"
-                + "type VARCHAR(30),\n"
-                + "";
+                + "FOREIGN KEY (country_id) REFERENCES dim_country(id),\n"
+                + "FOREIGN KEY (sector_id) REFERENCES dim_sector(id),\n"
+                + "FOREIGN KEY (industry_id) REFERENCES dim_industry(id));";
+        tryStatement(sql);
+    }
+    private void createTableFactTransaction() {
+        String sql = "CREATE TABLE IF NOT EXISTS fact_transaction (\n"
+                + "id PRIMARY KEY AUTOINCREMENT,\n"
+                + "FOREIGN KEY (portfolio_id) REFERENCES dim_portfolio(id),\n"
+                + "FOREIGN KEY (stock_id) REFERENCES dim_stock(id),\n"
+                + "FOREIGN KEY (price) REFERENCES fact_StockPrice(date),\n"
+                + "quantity INTEGER,\n"
+                + "date DATE);";
+        tryStatement(sql);
+    }
+    private void createTableDimCurrency() {
+        String sql = "CREATE TABLE IF NOT EXISTS dim_currency (\n"
+                + "id PRIMARY KEY AUTOINCREMENT,\n"
+                + "currency VARCHAR(3));";
+        tryStatement(sql);
+    }
+    private void createTableFactStockPrice() {
+        String sql = "CREATE TABLE IF NOT EXISTS fact_StockPrice (\n"
+                + "id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
+                + "FOREIGN KEY (stock_id) REFERENCES dim_stock(id),\n"
+                + "date DATE,\n"
+                + "price DECIMAL,\n"
+                + "FOREIGN KEY (currency_id) REFERENCES dim_currency(id));";
+        tryStatement(sql);
+    }
+    public void createTablePortfolio() {
+        String sql = "CREATE TABLE IF NOT EXISTS dim_portfolio (\n"
+                + "id PRIMARY KEY AUTOINCREMENT,\n"
+                + "name VARCHAR(25)\n"
+                + "created_at DATE,\n"
+                + "FOREIGN KEY (user_id) REFERENCES user(id)\n"
+                + ");";
+        tryStatement(sql);
 
     }
     private void createTableDimSector() {
@@ -47,7 +82,7 @@ public class SQLite {
         tryStatement(sql);
     }
     private void createTableCountry() {
-        String sql = "CREATE TABLE IF NOT EXISTS country (\n"
+        String sql = "CREATE TABLE IF NOT EXISTS dim_country (\n"
                 + " id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
                 + "name VARCHAR(30));";
         tryStatement(sql);
@@ -75,14 +110,5 @@ public class SQLite {
 
     }
 
-    public void createTablePortfolio() {
-        String sql = "CREATE TABLE IF NOT EXISTS portfolio (\n"
-                + "id PRIMARY KEY AUTOINCREMENT,\n"
-                + "name VARCHAR(25)\n"
-                + "created_at DATE,\n"
-                + "FOREIGN KEY (user_id) REFERENCES user(id)\n"
-                + ");";
-        tryStatement(sql);
 
-    }
 }
