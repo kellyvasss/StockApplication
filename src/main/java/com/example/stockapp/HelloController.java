@@ -1,6 +1,7 @@
 package com.example.stockapp;
 
 import SQL.MySQL;
+import SQL.SQLite;
 import api.AlphaVantage;
 import api.KeyReader;
 import javafx.fxml.FXML;
@@ -15,10 +16,14 @@ public class HelloController {
     private KeyReader keyReader;
     private AlphaVantage alphaVantage;
     private MySQL mySQL;
+    private SQLite sqLite;
     public HelloController() {
-        keyReader = new KeyReader("Alpha");
-        alphaVantage = new AlphaVantage(keyReader.getAPIKey());
-        mySQL = new MySQL("root", keyReader.getKey());
+      //  keyReader = new KeyReader("Alpha");
+       // alphaVantage = new AlphaVantage(keyReader.getAPIKey());
+       // mySQL = new MySQL("root", keyReader.getKey());
+        sqLite = new SQLite("hej");
+        sqLite.createTableUser();
+
     }
 
     @FXML

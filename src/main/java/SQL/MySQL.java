@@ -4,7 +4,7 @@ import java.sql.*;
 public class MySQL {
 
     Connection connection = null;
-    String url = "jdbc:mysql://127.0.0.1:3306/?user=";
+    String url = "jdbc:mysql://localhost:3306/stock";
 
 
     String username = "";
@@ -18,7 +18,7 @@ public class MySQL {
 
         try {
 
-            connection = DriverManager.getConnection(url , "newuser" , "roott");
+            connection = DriverManager.getConnection(url , "?user=Kelly" , "&password=Nusse453");
            // Statement statement = connection.createStatement();
            // statement.executeUpdate("CREATE DATABASE IF NOT EXISTS mydatabase");
             //System.out.println("Anslutning etablerad och databas skapad");
@@ -39,7 +39,7 @@ public class MySQL {
     public void createTable() {
 
     }
-    public void insertUser(User user) {
+    /*public void insertUser(User user) {
 
         try {
             PreparedStatement pstm = connection.prepareStatement(
@@ -47,6 +47,6 @@ public class MySQL {
             pstm.setString(1, user.getNumber());
             pstm.setString(2, user.getPassword());
         }
-    }
+    }*/
 
 }
