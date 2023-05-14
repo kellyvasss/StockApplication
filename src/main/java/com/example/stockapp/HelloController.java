@@ -7,6 +7,8 @@ import api.KeyReader;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
+import stock.Stock;
+import user.hash;
 
 public class HelloController {
     @FXML
@@ -32,6 +34,10 @@ public class HelloController {
         sqLite.createTableDimStock();
         sqLite.createTableFactStockPrice();
         sqLite.createTableFactTransaction();
+        String pas = hash.hasha("Kelly");
+        result = new TextArea();
+        result.setText(pas);
+
 
 
     }
@@ -41,6 +47,7 @@ public class HelloController {
 
 
         welcomeText.setText("Welcome to JavaFX Application!");
+        result.setText(hash.hasha("oooooooooooooooooooooooooooooooooooooooooo"));
 
         result.setText(alphaVantage.searchEndpoint("apple").toString());
 

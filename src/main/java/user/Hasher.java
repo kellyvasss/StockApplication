@@ -1,16 +1,13 @@
 package user;
-
-import org.apache.shiro.crypto.hash.Sha256Hash;
-
-import org.apache.shiro.crypto.hash.Hash;
 import org.apache.shiro.crypto.hash.SimpleHash;
 import org.apache.shiro.util.ByteSource;
 
 import java.security.SecureRandom;
 
-public class hash {
+public class Hasher {
 
-    public static String hasha(String raw) {
+    // Hashar en valfri string
+    public static String hash(String raw) {
 
         ByteSource salt = generateSalt();
 
@@ -19,6 +16,7 @@ public class hash {
         return hashedPassword;
 
     }
+    // Genererar random byte
     public static ByteSource generateSalt() {
 
         SecureRandom random = new SecureRandom();
@@ -26,4 +24,12 @@ public class hash {
         random.nextBytes(saltBytes);
         return ByteSource.Util.bytes(saltBytes);
     }
+
+    // Kontrollerar genom att ta in användarens inskrivna uppgift, användarens lagrade uppgift + salt
+    // och kör samma krypteringsalgoritm för att kolla om värdena stämmer
+    public static Boolean verify(String raw, String hashed, ByteSource salt) {
+        String toVerify = new SimpleHash("SHA-256", raw, salt,100).toHex();
+        return toVerify.equals(hashed);
+    }
 }
+
