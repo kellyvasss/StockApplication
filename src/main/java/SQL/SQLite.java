@@ -26,89 +26,102 @@ public class SQLite {
             statement.execute(sql);
             statement.close();
         } catch (SQLException e) {
-            System.out.println(e.getMessage());
+            System.out.println(e.getMessage() + e.getErrorCode() + e.getSQLState());
+
         }
     }
-    private void createTableDimStock() {
+    public void createTableDimStock() {
         String sql = "CREATE TABLE IF NOT EXISTS dim_stock (\n"
                 + "id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
                 + "symbol VARCHAR(6),\n"
                 + "name VARCHAR(50),\n"
                 + "description TEXT,\n"
+                + "country_id INTEGER,\n"
+                + "sector_id INTEGER,\n"
+                + "industry_id INTEGER,\n"
                 + "FOREIGN KEY (country_id) REFERENCES dim_country(id),\n"
                 + "FOREIGN KEY (sector_id) REFERENCES dim_sector(id),\n"
                 + "FOREIGN KEY (industry_id) REFERENCES dim_industry(id));";
+
+
         tryStatement(sql);
     }
-    private void createTableFactTransaction() {
+    public void createTableFactTransaction() {
         String sql = "CREATE TABLE IF NOT EXISTS fact_transaction (\n"
-                + "id PRIMARY KEY AUTOINCREMENT,\n"
+                + "id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
+                + "portfolio_id INTEGER NOT NULL,\n"
+                + "stock_id INTEGER NOT NULL,\n"
+                + "date DATE,\n"
                 + "FOREIGN KEY (portfolio_id) REFERENCES dim_portfolio(id),\n"
-                + "FOREIGN KEY (stock_id) REFERENCES dim_stock(id),\n"
-                + "FOREIGN KEY (price) REFERENCES fact_StockPrice(date),\n"
-                + "quantity INTEGER,\n"
-                + "date DATE);";
+                + "FOREIGN KEY (stock_id) REFERENCES fact_StockPrice(stock_id),\n"
+                + "FOREIGN KEY (date) REFERENCES fact_StockPrice(date),\n"
+                + "UNIQUE (stock_id, date));";
         tryStatement(sql);
     }
-    private void createTableDimCurrency() {
+    public void createTableDimCurrency() {
         String sql = "CREATE TABLE IF NOT EXISTS dim_currency (\n"
-                + "id PRIMARY KEY AUTOINCREMENT,\n"
+                + "id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
                 + "currency VARCHAR(3));";
         tryStatement(sql);
     }
-    private void createTableFactStockPrice() {
+    public void createTableFactStockPrice() {
         String sql = "CREATE TABLE IF NOT EXISTS fact_StockPrice (\n"
                 + "id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
-                + "FOREIGN KEY (stock_id) REFERENCES dim_stock(id),\n"
+                + "stock_id INTEGER NOT NULL,\n"
                 + "date DATE,\n"
                 + "price DECIMAL,\n"
+                + "currency_id INTEGER NOT NULL,\n"
+                + "FOREIGN KEY (stock_id) REFERENCES dim_stock(id),\n"
                 + "FOREIGN KEY (currency_id) REFERENCES dim_currency(id));";
         tryStatement(sql);
     }
     public void createTablePortfolio() {
         String sql = "CREATE TABLE IF NOT EXISTS dim_portfolio (\n"
-                + "id PRIMARY KEY AUTOINCREMENT,\n"
-                + "name VARCHAR(25)\n"
+                + "id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
+                + "name VARCHAR(30),\n"
                 + "created_at DATE,\n"
-                + "FOREIGN KEY (user_id) REFERENCES user(id)\n"
+                + "user_id INTEGER NOT NULL,\n"
+                + "FOREIGN KEY (user_id) REFERENCES dim_user(id)\n"
                 + ");";
         tryStatement(sql);
 
     }
-    private void createTableDimSector() {
+    public void createTableDimSector() {
         String sql = "CREATE TABLE IF NOT EXISTS dim_sector (\n"
                 + "id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
                 + "name VARCHAR(30));";
         tryStatement(sql);
     }
-    private void createTableCountry() {
+    public void createTableCountry() {
         String sql = "CREATE TABLE IF NOT EXISTS dim_country (\n"
-                + " id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
+                + "id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
                 + "name VARCHAR(30));";
         tryStatement(sql);
     }
-    private void createTableDimIndustry() {
-        String sql = "CREATE TABLE IF NOT EXISTS industry (\n"
+    public void createTableDimIndustry() {
+        String sql = "CREATE TABLE IF NOT EXISTS dim_industry (\n"
                 + "id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
                 + "name VARCHAR(50));";
         tryStatement(sql);
     }
-    private void createTableDimMarket() {
-        String sql = "CREATE TABLE IF NOT EXISTS market (\n"
-                + "id PRIMARY KEY AUTOINCREMENT,\n"
+    public void createTableDimMarket() {
+        String sql = "CREATE TABLE IF NOT EXISTS dim_market (\n"
+                + "id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
                 + "name VARCHAR(10));";
         tryStatement(sql);
     }
     public void createTableUser() {
-        String sql= "CREATE TABLE IF NOT EXISTS user (\n"
+        String sql= "CREATE TABLE IF NOT EXISTS dim_user (\n"
                 + "id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
                 + "person_id VARCHAR(10),\n"
-                + "password VARCHAR(250),\n"
+                + "password TEXT,\n"
                 + "email VARCHAR(50)\n"
                 + ");";
         tryStatement(sql);
 
     }
+
+
 
 
 }

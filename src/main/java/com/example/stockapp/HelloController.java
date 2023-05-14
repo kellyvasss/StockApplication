@@ -23,6 +23,16 @@ public class HelloController {
        // mySQL = new MySQL("root", keyReader.getKey());
         sqLite = new SQLite("hej");
         sqLite.createTableUser();
+        sqLite.createTablePortfolio();
+        sqLite.createTableCountry();
+        sqLite.createTableDimCurrency();
+        sqLite.createTableDimIndustry();
+        sqLite.createTableDimMarket();
+        sqLite.createTableDimSector();
+        sqLite.createTableDimStock();
+        sqLite.createTableFactStockPrice();
+        sqLite.createTableFactTransaction();
+
 
     }
 
