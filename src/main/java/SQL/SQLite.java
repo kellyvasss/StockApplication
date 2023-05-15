@@ -5,17 +5,17 @@ import user.User;
 
 import java.sql.*;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 
 public class SQLite {
 
     Connection conn = null;
 
     String dbName = "";
-    User user;
 
     public SQLite(String dbName) {
         this.dbName = dbName;
-        user = new User();
+
 
         try {
             conn = DriverManager.getConnection("jdbc:sqlite:" + dbName + ".db");
@@ -116,20 +116,20 @@ public class SQLite {
     public void createTableUser() {
         String sql= "CREATE TABLE IF NOT EXISTS dim_user (\n"
                 + "id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
-                + "person_id VARCHAR(10),\n"
+                + "person_id VARCHAR(10) UNIQUE,\n"
                 + "password TEXT,\n"
-                + "email VARCHAR(50)\n"
+                + "email VARCHAR(50),\n"
                 + "pas_salt VARCHAR(16),"
                 + "id_salt VARCHAR(16)"
                 + ");";
         tryStatement(sql);
     }
-    private Integer security(String person_id) {
+    private Integer security(User user) {
         String sql = "SELECT id FROM dim_user WHERE person_id=?";
         Integer sec = null;
         try {
             PreparedStatement prepared = conn.prepareStatement(sql);
-            prepared.setString(1, person_id);
+            prepared.setString(1, user.getPerson_id());
             ResultSet rs = prepared.executeQuery();
             sec = rs.getInt("id");
         } catch (SQLException e) {
@@ -153,14 +153,17 @@ public class SQLite {
             succes = false;
         } return succes;
     }
-    public Boolean insertPortfolio(Portfolio portfolio) {
+    public Boolean insertPortfolio(Portfolio portfolio, User user) {
         Boolean succes = true;
-        String sql = "INSERT INTO dim_portfolio(name, created_at, user_id) VALUES(?,?,?)";
+        LocalDate today = LocalDate.now();
+        Date date = Date.valueOf(today);
+
+        String sql = "INSERT INTO dim_portfolio(name, created_at, user_id) VALUES(?, ?, ?)";
         try {
             PreparedStatement prepared = conn.prepareStatement(sql);
             prepared.setString(1, portfolio.getName());
-            prepared.setDate(2, Date.valueOf(LocalDate.now()));
-            prepared.setInt(3, security(user.getPerson_id()));
+            prepared.setString(2, String.valueOf(date));
+            prepared.setInt(3, security(user));
             prepared.executeUpdate();
         } catch (SQLException e) {
             System.out.println("fel med antagligen user implementationen... " + e.getMessage());
