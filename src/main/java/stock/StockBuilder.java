@@ -33,6 +33,10 @@ public class StockBuilder {
         stock.setIndustry(industry);
         return this;
     }
+    public StockBuilder price(Double price) {
+        stock.setPrice(price);
+        return this;
+    }
     public Stock build() {
         return stock;
     }

@@ -1,14 +1,27 @@
 package user;
 
+import stock.Portfolio;
+
+import java.util.ArrayList;
+
 public class User {
 
     private String person_id;
     private String password;
     private String email;
 
+    private ArrayList<Portfolio> portfolios;
+    public User() {
+
+        password = getPassword();
+        person_id = getPerson_id();
+        portfolios = new ArrayList<>();
+    }
+
     public User(String person_id, String password) {
         this.person_id = person_id;
         this.password = password;
+        portfolios = new ArrayList<>();
     }
 
     public String getPerson_id() {
@@ -34,4 +47,13 @@ public class User {
     public void setEmail(String email) {
         this.email = email;
     }
+
+    public Double calculateTotal() {
+        Double total = 0.0;
+        for (Portfolio portfolio : portfolios) {
+            total = portfolio.calculateTotal();
+        }
+        return total;
+    }
+
 }

@@ -8,6 +8,7 @@ public class Stock {
     private String currency;
     private String sector;
     private String industry;
+    private Double price;
 
     public String getSymbol() {
         return symbol;
@@ -61,7 +62,16 @@ public class Stock {
         return industry;
     }
 
+
     public void setIndustry(String industry) {
         this.industry = industry;
+    }
+
+    public Double getPrice() {
+        return price;
+    }
+
+    public void setPrice(Double price) {
+        this.price = price;
     }
 }

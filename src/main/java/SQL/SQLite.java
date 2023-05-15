@@ -1,18 +1,21 @@
 package SQL;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
+import stock.Portfolio;
+import user.User;
+
+import java.sql.*;
+import java.time.LocalDate;
 
 public class SQLite {
 
     Connection conn = null;
 
     String dbName = "";
+    User user;
 
     public SQLite(String dbName) {
         this.dbName = dbName;
+        user = new User();
 
         try {
             conn = DriverManager.getConnection("jdbc:sqlite:" + dbName + ".db");
@@ -116,9 +119,53 @@ public class SQLite {
                 + "person_id VARCHAR(10),\n"
                 + "password TEXT,\n"
                 + "email VARCHAR(50)\n"
+                + "pas_salt VARCHAR(16),"
+                + "id_salt VARCHAR(16)"
                 + ");";
         tryStatement(sql);
-
+    }
+    private Integer security(String person_id) {
+        String sql = "SELECT id FROM dim_user WHERE person_id=?";
+        Integer sec = null;
+        try {
+            PreparedStatement prepared = conn.prepareStatement(sql);
+            prepared.setString(1, person_id);
+            ResultSet rs = prepared.executeQuery();
+            sec = rs.getInt("id");
+        } catch (SQLException e) {
+            System.out.println("fel med security metoden. " + e.getMessage());
+            return sec;
+        }
+        return sec;
+    }
+    public Boolean insertUser(User user) {
+        Boolean succes = true;
+        String sql = "INSERT INTO dim_user(person_id, password, pas_salt, id_salt) VALUES(?,?,?,?)";
+        try {
+            PreparedStatement prepared = conn.prepareStatement(sql);
+            prepared.setString(1, user.getPerson_id());
+            prepared.setString(2,user.getPassword());
+            prepared.setString(3, user.getPasSalt());
+            prepared.setString(4, user.getIdSalt());
+            prepared.executeUpdate();
+        } catch (SQLException e) {
+            System.out.println("fel med att lägga till user i dim_user. " + e.getMessage());
+            succes = false;
+        } return succes;
+    }
+    public Boolean insertPortfolio(Portfolio portfolio) {
+        Boolean succes = true;
+        String sql = "INSERT INTO dim_portfolio(name, created_at, user_id) VALUES(?,?,?)";
+        try {
+            PreparedStatement prepared = conn.prepareStatement(sql);
+            prepared.setString(1, portfolio.getName());
+            prepared.setDate(2, Date.valueOf(LocalDate.now()));
+            prepared.setInt(3, security(user.getPerson_id()));
+            prepared.executeUpdate();
+        } catch (SQLException e) {
+            System.out.println("fel med antagligen user implementationen... " + e.getMessage());
+            succes = false;
+        } return succes;
     }
 
 

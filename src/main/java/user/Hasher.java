@@ -27,9 +27,19 @@ public class Hasher {
 
     // Kontrollerar genom att ta in användarens inskrivna uppgift, användarens lagrade uppgift + salt
     // och kör samma krypteringsalgoritm för att kolla om värdena stämmer
-    public static Boolean verify(String raw, String hashed, ByteSource salt) {
-        String toVerify = new SimpleHash("SHA-256", raw, salt,100).toHex();
+    public static Boolean verify(String raw, String hashed, String salt) {
+        byte[] bytes = convertFromStr(salt);
+        String toVerify = new SimpleHash("SHA-256", raw, bytes,100).toHex();
         return toVerify.equals(hashed);
+    }
+    public static byte[] convertFromStr(String salt) {
+        byte[] saltBytes = new byte[salt.length()/2];
+        for (int i = 0; i < saltBytes.length; i++) {
+            int index = i * 2;
+            int j = Integer.parseInt(salt.substring(index, index + 2), 16);
+            saltBytes[i] = (byte) j;
+        }
+        return saltBytes;
     }
 }
 
