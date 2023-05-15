@@ -74,11 +74,12 @@ public class SQLite {
         String sql = "CREATE TABLE IF NOT EXISTS fact_StockPrice (\n"
                 + "id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
                 + "stock_id INTEGER NOT NULL,\n"
-                + "date DATE,\n"
+                + "date DATE NOT NULL,\n"
                 + "price DECIMAL,\n"
                 + "currency_id INTEGER NOT NULL,\n"
                 + "FOREIGN KEY (stock_id) REFERENCES dim_stock(id),\n"
-                + "FOREIGN KEY (currency_id) REFERENCES dim_currency(id));";
+                + "FOREIGN KEY (currency_id) REFERENCES dim_currency(id)"
+                + "UNIQUE(stock_id, date));";
         tryStatement(sql);
     }
     public void createTablePortfolio() {
@@ -174,171 +175,160 @@ public class SQLite {
         } return succes;
     }
     public Integer insertMarket(Stock stock) {
-        String sql = "SELECT id FROM dim_market WHERE name=?";
+        String selectSql = "SELECT id FROM dim_market WHERE name=?";
+        String insertSql = "INSERT INTO dim_market(name) VALUES(?)";
+        String selectCountSql = "SELECT COUNT(*) id FROM dim_market;";
         try {
-            PreparedStatement p = conn.prepareStatement(sql);
-            p.setString(1, stock.getExchange());
-            ResultSet rs = p.executeQuery();
+            PreparedStatement selectStatement = conn.prepareStatement(selectSql);
+            selectStatement.setString(1, stock.getExchange());
+            ResultSet rs = selectStatement.executeQuery();
             if (rs.next()) {
                 return rs.getInt("id");
+            } else {
+                PreparedStatement insertStatement = conn.prepareStatement(insertSql);
+                insertStatement.setString(1, stock.getExchange());
+                insertStatement.executeUpdate();
+                PreparedStatement selectCountStatement = conn.prepareStatement(selectCountSql);
+                ResultSet countRs = selectCountStatement.executeQuery();
+                if (countRs.next()) {
+                    return countRs.getInt("id");
+                }
             }
         } catch (SQLException e) {
-            System.out.println(e.getMessage() + " Nu är den inne i första catch");
-            try {
-                String sql1 = "INSERT INTO dim_market(name) VALUES(?)";
-                PreparedStatement p = conn.prepareStatement(sql1);
-                p.setString(1,stock.getExchange());
-                p.executeUpdate();
-                String s = "SELECT count(*) id FROM dim_market;";
-                p = conn.prepareStatement(s);
-                ResultSet rs = p.executeQuery();
-                if (rs.next()) {
-                    return rs.getInt("id");
-                }
-            } catch (SQLException ee ) {
-                System.out.println(ee.getMessage() + " andra catchen");
-            }
-        } return null;
-    }
-    public Integer insertDimMarketGPT(Stock stock) {
-        String sql = "INSERT INTO dim_market(name) VALUES(?)";
-        try {
-            PreparedStatement prepared = conn.prepareStatement(sql);
-            prepared.setString(1, stock.getExchange());
-            prepared.executeUpdate();
-
-            String sql1 = "SELECT id FROM dim_market WHERE name=?";
-            PreparedStatement prepared1 = conn.prepareStatement(sql1);
-            prepared1.setString(1, stock.getExchange());
-            ResultSet rs = prepared1.executeQuery();
-
-            if (rs.next()) {
-                return rs.getInt("id");
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage() + " finns antagligen redan");
-            String sql1 = "SELECT id FROM dim_market WHERE name=?";
-            try {
-                PreparedStatement prepared = conn.prepareStatement(sql1);
-                prepared.setString(1, stock.getExchange());
-                ResultSet rs = prepared.executeQuery();
-                if (rs.next()) {
-                    return rs.getInt("id");
-                }
-            } catch (SQLException ee) {
-                System.out.println(ee.getMessage() + " i den andra try");
-            }
-        }
-        return null;
-    }
-
-    public Integer insertDimMarket(Stock stock) {
-        String sql = "INSERT INTO dim_market(name) VALUES(?)";
-        try {
-            PreparedStatement prepared = conn.prepareStatement(sql);
-            prepared.setString(1,stock.getExchange());
-            prepared.executeUpdate();
-            ResultSet rs = prepared.executeQuery();
-            if (rs.next()) {
-                return rs.getInt("id");
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage() + " finns antagligen redan");
-            String sql1 = "SELECT id FROM dim_market WHERE name=?";
-            try {
-                PreparedStatement prepared = conn.prepareStatement(sql1);
-                prepared.setString(1,stock.getExchange());
-                ResultSet rs = prepared.executeQuery();
-                if (rs.next()) {
-                    return rs.getInt("id");
-                }
-            } catch (SQLException ee) {
-                System.out.println(ee.getMessage() + " i den andra try");
-            }
+            e.printStackTrace();
         }
         return null;
     }
     public Integer insertCountry(Stock stock) {
-        String sql = "SELECT id FROM dim_country WHERE name=?";
+        String selectSql = "SELECT id FROM dim_country WHERE name=?";
+        String insertSql = "INSERT INTO dim_country(name) VALUES(?)";
+        String selectCountSql = "SELECT COUNT(*) id FROM dim_country;";
         try {
-            PreparedStatement p = conn.prepareStatement(sql);
-            p.setString(1, stock.getCountry());
-            ResultSet rs = p.executeQuery();
+            PreparedStatement selectStatement = conn.prepareStatement(selectSql);
+            selectStatement.setString(1, stock.getCountry());
+            ResultSet rs = selectStatement.executeQuery();
             if (rs.next()) {
                 return rs.getInt("id");
+            } else {
+                PreparedStatement insertStatement = conn.prepareStatement(insertSql);
+                insertStatement.setString(1, stock.getCountry());
+                insertStatement.executeUpdate();
+                PreparedStatement selectCountStatement = conn.prepareStatement(selectCountSql);
+                ResultSet countRs = selectCountStatement.executeQuery();
+                if (countRs.next()) {
+                    return countRs.getInt("id");
+                }
             }
         } catch (SQLException e) {
-            System.out.println(e.getMessage() + " Nu är den inne i första catch");
-            try {
-                String sql1 = "INSERT INTO dim_country(name) VALUES(?)";
-                PreparedStatement p = conn.prepareStatement(sql1);
-                p.setString(1,stock.getExchange());
-                p.executeUpdate();
-                String s = "SELECT count(*) id FROM dim_country;";
-                p = conn.prepareStatement(s);
-                ResultSet rs = p.executeQuery();
-                if (rs.next()) {
-                    return rs.getInt("id");
-                }
-            } catch (SQLException ee ) {
-                System.out.println(ee.getMessage() + " andra catchen");
-            }
-        } return null;
+            e.printStackTrace();
+        }
+        return null;
     }
     public Integer insertSector(Stock stock) {
-        String sql = "SELECT id FROM dim_sector WHERE name=?";
+        String selectSql = "SELECT id FROM dim_sector WHERE name=?";
+        String insertSql = "INSERT INTO dim_sector(name) VALUES(?)";
+        String selectCountSql = "SELECT COUNT(*) id FROM dim_sector;";
         try {
-            PreparedStatement p = conn.prepareStatement(sql);
-            p.setString(1, stock.getSector());
-            ResultSet rs = p.executeQuery();
+            PreparedStatement selectStatement = conn.prepareStatement(selectSql);
+            selectStatement.setString(1, stock.getSector());
+            ResultSet rs = selectStatement.executeQuery();
             if (rs.next()) {
                 return rs.getInt("id");
-            }  p.close();
-        } catch (SQLException e) {
-            System.out.println(e.getMessage() + " Nu är den inne i första catch");
-            try {
-                String sql1 = "INSERT INTO dim_sector(name) VALUES(?)";
-                PreparedStatement p = conn.prepareStatement(sql1);
-                p.setString(1,stock.getSector());
-                p.executeUpdate();
-                String s = "SELECT count(*) id FROM dim_sector;";
-                p = conn.prepareStatement(s);
-                ResultSet rs = p.executeQuery();
-                if (rs.next()) {
-                    return rs.getInt("id");
-                } p.close();
-            } catch (SQLException ee ) {
-                System.out.println(ee.getMessage() + " andra catchen");
+            } else {
+                PreparedStatement insertStatement = conn.prepareStatement(insertSql);
+                insertStatement.setString(1, stock.getSector());
+                insertStatement.executeUpdate();
+                PreparedStatement selectCountStatement = conn.prepareStatement(selectCountSql);
+                ResultSet countRs = selectCountStatement.executeQuery();
+                if (countRs.next()) {
+                    return countRs.getInt("id");
+                }
             }
-        } return null;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
+
     public Integer insertIndustry(Stock stock) {
-        String sql = "SELECT id FROM dim_industry WHERE name=?";
+        String selectSql = "SELECT id FROM dim_industry WHERE name=?";
+        String insertSql = "INSERT INTO dim_industry(name) VALUES(?)";
+        String selectCountSql = "SELECT COUNT(*) id FROM dim_industry;";
+        try {
+            PreparedStatement selectStatement = conn.prepareStatement(selectSql);
+            selectStatement.setString(1, stock.getIndustry());
+            ResultSet rs = selectStatement.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("id");
+            } else {
+                PreparedStatement insertStatement = conn.prepareStatement(insertSql);
+                insertStatement.setString(1, stock.getIndustry());
+                insertStatement.executeUpdate();
+                PreparedStatement selectCountStatement = conn.prepareStatement(selectCountSql);
+                ResultSet countRs = selectCountStatement.executeQuery();
+                if (countRs.next()) {
+                    return countRs.getInt("id");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+    public Integer stock(Stock stock) {
+        String sql = "SELECT id FROM dim_stock WHERE symbol=?";
         try {
             PreparedStatement p = conn.prepareStatement(sql);
-            p.setString(1, stock.getIndustry());
+            p.setString(1,stock.getSymbol());
             ResultSet rs = p.executeQuery();
             if (rs.next()) {
                 return rs.getInt("id");
-            } p.close();
-        } catch (SQLException e) {
-            System.out.println(e.getMessage() + " Nu är den inne i första catch");
-            try {
-                String sql1 = "INSERT INTO dim_industry(name) VALUES(?)";
-                PreparedStatement p = conn.prepareStatement(sql1);
-                p.setString(1,stock.getIndustry());
-                p.executeUpdate();
-                String s = "SELECT count(*) id FROM dim_industry;";
-                p = conn.prepareStatement(s);
-                ResultSet rs = p.executeQuery();
-                if (rs.next()) {
-                    return rs.getInt("id");
-                } p.close();
-            } catch (SQLException ee ) {
-                System.out.println(ee.getMessage() + " andra catchen");
+            } else {
+                insertDimStock(stock);
+                String sqlCount = "SELECT COUNT(*) id FROM dim_currency;";
+                PreparedStatement ps = conn.prepareStatement(sqlCount);
+                ResultSet r = ps.executeQuery();
+                if (r.next()) {
+                    return r.getInt("id");
+                }
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
         } return null;
     }
+    private void insertCurrency(Stock stock) {
+        String sql = "INSERT INTO dim_currency(currency) VALUES(?)";
+        try {
+            PreparedStatement p = conn.prepareStatement(sql);
+            p.setString(1, stock.getCurrency());
+            p.executeUpdate();
+            p.close();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+    public Integer currency(Stock stock) {
+        String sql = "SELECT id FROM dim_currency WHERE currency=?";
+        try {
+            PreparedStatement p = conn.prepareStatement(sql);
+            p.setString(1, stock.getCurrency());
+            ResultSet rs = p.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("id");
+            } else {
+                insertCurrency(stock);
+                String sqlCount = "SELECT COUNT(*) id FROM dim_currency;";
+                PreparedStatement ps = conn.prepareStatement(sqlCount);
+                ResultSet r = ps.executeQuery();
+                if (r.next()) {
+                    return r.getInt("id");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } return null;
+    }
+
     public void insertDimStock(Stock stock) {
         Integer market = insertMarket(stock);
         Integer country = insertCountry(stock);
@@ -362,10 +352,21 @@ public class SQLite {
             System.out.println(e.getMessage());
         }
     }
-
-
-
-
-
-
+    public void insertFactStock(Stock s) {
+        Integer stock = stock(s);
+        Integer currency = currency(s);
+        String sql = "INSERT INTO fact_StockPrice(stock_id, date, price, currency_id) "
+                + "VALUES(?,?,?,?)";
+        try {
+            PreparedStatement p = conn.prepareStatement(sql);
+            p.setInt(1, stock);
+            p.setString(2, s.getDate());
+            p.setDouble(3, s.getPrice());
+            p.setInt(4, currency);
+            p.executeUpdate();
+            p.close();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
 }

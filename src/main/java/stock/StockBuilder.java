@@ -41,6 +41,10 @@ public class StockBuilder {
         stock.setPrice(price);
         return this;
     }
+    public StockBuilder date(String date) {
+        stock.setDate(date);
+        return this;
+    }
     public Stock build() {
         return stock;
     }

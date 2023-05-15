@@ -40,7 +40,7 @@ public class test {
         portfolio.setStock(stock);
         portfolio.setStock(stock1);
 
-        SQLite sqLite = new SQLite("Test");
+        SQLite sqLite = new SQLite("Testt");
         sqLite.createTableUser();
         sqLite.createTablePortfolio();
         sqLite.createTableCountry();
@@ -58,31 +58,37 @@ public class test {
         LocalDate today = LocalDate.now();
         Date date = Date.valueOf(today);
         System.out.println(date);
-        //sqLite.insertDimStock(stock1);
+        sqLite.insertDimStock(stock1);
 
         Stock stock2 = new StockBuilder()
-                .country("USA")
-                .sector("Tv and Tele")
-                .exchange("NYSE")
-                .industry("Technology")
+                .country("Canada")
+                .sector("Vegetarian and Vegan")
+                .exchange("NASDAQ")
+                .industry("Food")
                 .description("This is a test company")
-                .name("Test AB")
+                .name("HEje")
                 .price(14.5)
                 .currency("EUR")
-                .symbol("TEST")
+                .symbol("DATE")
+                .date("2022-02-01")
                 .build();
+        sqLite.insertDimStock(stock2);
+        sqLite.insertFactStock(stock2);
+        sqLite.insertFactStock(stock2);
         Stock stock3 = new StockBuilder()
-                .country("USA")
-                .sector("Tv and Tele")
-                .exchange("NYSE")
-                .industry("Technology")
+                .country("Spain")
+                .sector("Makeup")
+                .exchange("NASDAQ")
+                .industry("Cosmetique")
                 .description("This is a test company")
                 .name("Test AB")
                 .price(14.5)
                 .currency("EUR")
-                .symbol("TEST1")
+                .symbol("Loreal")
+                .date("2022-02-01")
                 .build();
-        System.out.println(stock3.getIndustry());
+        sqLite.insertFactStock(stock3);
+        sqLite.insertFactStock(stock3);
         sqLite.insertDimStock(stock3);
 
 
