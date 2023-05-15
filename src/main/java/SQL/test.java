@@ -25,11 +25,16 @@ public class test {
                 .build();
         Stock stock1 = new StockBuilder()
                 .currency("USD")
+                .name("Apple INC")
+                .description("This is a apple company that sells electronic products")
+                .country("USA")
+                .sector("Tv and Tele")
                 .exchange("NYSE")
                 .industry("Tech")
                 .price(79.5)
                 .symbol("123")
                 .build();
+        System.out.println(stock1.getExchange());
 
         portfolio.setName("Hej");
         portfolio.setStock(stock);
@@ -53,6 +58,32 @@ public class test {
         LocalDate today = LocalDate.now();
         Date date = Date.valueOf(today);
         System.out.println(date);
+        //sqLite.insertDimStock(stock1);
+
+        Stock stock2 = new StockBuilder()
+                .country("USA")
+                .sector("Tv and Tele")
+                .exchange("NYSE")
+                .industry("Technology")
+                .description("This is a test company")
+                .name("Test AB")
+                .price(14.5)
+                .currency("EUR")
+                .symbol("TEST")
+                .build();
+        Stock stock3 = new StockBuilder()
+                .country("USA")
+                .sector("Tv and Tele")
+                .exchange("NYSE")
+                .industry("Technology")
+                .description("This is a test company")
+                .name("Test AB")
+                .price(14.5)
+                .currency("EUR")
+                .symbol("TEST1")
+                .build();
+        System.out.println(stock3.getIndustry());
+        sqLite.insertDimStock(stock3);
 
 
 

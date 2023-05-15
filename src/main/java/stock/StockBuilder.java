@@ -9,6 +9,10 @@ public class StockBuilder {
         stock.setSymbol(symbol);
         return this;
     }
+    public StockBuilder country(String country) {
+        stock.setCountry(country);
+        return this;
+    }
     public StockBuilder name(String name) {
         stock.setName(name);
         return this;
