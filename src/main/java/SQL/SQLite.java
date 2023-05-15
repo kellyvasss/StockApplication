@@ -174,6 +174,7 @@ public class SQLite {
             succes = false;
         } return succes;
     }
+    // funkar
     public Integer insertMarket(Stock stock) {
         String selectSql = "SELECT id FROM dim_market WHERE name=?";
         String insertSql = "INSERT INTO dim_market(name) VALUES(?)";
@@ -199,6 +200,7 @@ public class SQLite {
         }
         return null;
     }
+    // funkar
     public Integer insertCountry(Stock stock) {
         String selectSql = "SELECT id FROM dim_country WHERE name=?";
         String insertSql = "INSERT INTO dim_country(name) VALUES(?)";
@@ -224,6 +226,7 @@ public class SQLite {
         }
         return null;
     }
+    // funkar
     public Integer insertSector(Stock stock) {
         String selectSql = "SELECT id FROM dim_sector WHERE name=?";
         String insertSql = "INSERT INTO dim_sector(name) VALUES(?)";
@@ -250,6 +253,7 @@ public class SQLite {
         return null;
     }
 
+    // funkar
     public Integer insertIndustry(Stock stock) {
         String selectSql = "SELECT id FROM dim_industry WHERE name=?";
         String insertSql = "INSERT INTO dim_industry(name) VALUES(?)";
@@ -275,6 +279,7 @@ public class SQLite {
         }
         return null;
     }
+    // funkar
     public Integer stock(Stock stock) {
         String sql = "SELECT id FROM dim_stock WHERE symbol=?";
         try {
@@ -296,6 +301,7 @@ public class SQLite {
             e.printStackTrace();
         } return null;
     }
+    // funkar
     private void insertCurrency(Stock stock) {
         String sql = "INSERT INTO dim_currency(currency) VALUES(?)";
         try {
@@ -307,6 +313,7 @@ public class SQLite {
             System.out.println(e.getMessage());
         }
     }
+    // funkar
     public Integer currency(Stock stock) {
         String sql = "SELECT id FROM dim_currency WHERE currency=?";
         try {
@@ -329,6 +336,7 @@ public class SQLite {
         } return null;
     }
 
+    // funkar
     public void insertDimStock(Stock stock) {
         Integer market = insertMarket(stock);
         Integer country = insertCountry(stock);
@@ -352,6 +360,7 @@ public class SQLite {
             System.out.println(e.getMessage());
         }
     }
+    // funkar
     public void insertFactStock(Stock s) {
         Integer stock = stock(s);
         Integer currency = currency(s);
