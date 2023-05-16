@@ -5,6 +5,8 @@ import okhttp3.Response;
 import org.json.JSONObject;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import stock.Market;
+import stock.MarketBuilder;
 import stock.Stock;
 import stock.StockBuilder;
 
@@ -176,7 +178,8 @@ public class AlphaVantage {
             return null;
         }
     }
-    public List<String> showMarketStatus() {
+    public ArrayList<Market> getMarkets() {
+        ArrayList<Market> markets = new ArrayList<>();
         String function = "MARKET_STATUS";
         String url = base_url + function + "&apikey=" + key;
 
@@ -184,33 +187,59 @@ public class AlphaVantage {
                 .url(url)
                 .get()
                 .build();
-
-        try (Response response = client.newCall(request).execute()) {
+        try {
+            Response response = client.newCall(request).execute();
             if (response.isSuccessful()) {
                 String json = response.body().string();
-
                 ObjectMapper objectMapper = new ObjectMapper();
                 JsonNode jsonNode = objectMapper.readTree(json);
-
-                List<String> names = new ArrayList<>();
-
-                JsonNode matchesNode = jsonNode.get("markets");
-                for (JsonNode matchNode : matchesNode) {
-                    JsonNode nameNode = matchNode.get("region");
-                    if (nameNode != null && !nameNode.isNull()) {
-                        String name = nameNode.asText();
-                        names.add(name);
+                JsonNode marketsNode = jsonNode.get("markets");
+                for (JsonNode marketNode : marketsNode) {
+                    String region = marketNode.get("region").asText();
+                    String primaryExchanges = marketNode.get("primary_exchanges").asText();
+                    String[] exchanges = primaryExchanges.split(","); // Separera exchanges vid kommatecken
+                    String localOpen = marketNode.get("local_open").asText();
+                    String localClose = marketNode.get("local_close").asText();
+                    String note = marketNode.get("notes").asText();
+                    for (String exchange : exchanges) {
+                        Market market = new MarketBuilder()
+                                .name(exchange.trim())
+                                .open(localOpen)
+                                .close(localClose)
+                                .note(note)
+                                .country(region)
+                                .build();
+                        markets.add(market);
                     }
                 }
 
-                return names;
-            } else {
-                throw new IOException("Wrong symbol");
             }
-        } catch (IOException e) {
-            return null;
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+        return markets;
     }
-
+    public Double currencyConverter(String fromCurrency, String toCurrency) {
+        String function = "CURRENCY_EXCHANGE_RATE";
+        String url = base_url + function
+                + "&from_currency=" + fromCurrency
+                + "&to_currency=" + toCurrency
+                + "&apikey=" + key;
+        Request request = new Request.Builder()
+                .url(url)
+                .get()
+                .build();
+        try (Response response = client.newCall(request).execute()) {
+            if (response.isSuccessful()) {
+                String json = response.body().string();
+                ObjectMapper objectMapper = new ObjectMapper();
+                JsonNode jsonNode = objectMapper.readTree(json);
+                JsonNode answer = jsonNode.get("Realtime Currency Exchange Rate");
+                return answer.get("5. Exchange Rate").asDouble();
+            }
+        } catch (Exception e) {
+           e.printStackTrace();
+        } return null;
+    }
 
 }

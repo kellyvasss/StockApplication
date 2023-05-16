@@ -22,15 +22,18 @@ public class test {
 
         //System.out.println(stock.getSector());
 
-        ArrayList<Stock> stocks = alphaVantage.timeSeriesDailyAdjusted("IBM");
+       /* ArrayList<Stock> stocks = alphaVantage.timeSeriesDailyAdjusted("IBM");
         System.out.println(stocks.get(0).getDate());
         System.out.println(stocks.get(0).getPrice());
         System.out.println(stocks.get(0).getSymbol());
         System.out.println(stocks.size());
         System.out.println(stocks.get(50).getPrice());
         System.out.println(alphaVantage.quote("BA"));
-        System.out.println(alphaVantage.searchEndpoint("he"));
+        System.out.println(alphaVantage.searchEndpoint("he"));*/
 
+        //System.out.println(alphaVantage.getMarkets().toString());
+
+        System.out.println(alphaVantage.currencyConverter("USD", "JPY"));
         /*User user = new User("9906220182", "kelly");
         user.setIdSalt("10");
         user.setPasSalt("5");
