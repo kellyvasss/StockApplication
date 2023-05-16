@@ -1,4 +1,6 @@
 package SQL;
+import api.AlphaVantage;
+import api.KeyReader;
 import stock.Portfolio;
 import stock.Stock;
 import stock.StockBuilder;
@@ -7,11 +9,27 @@ import user.hash;
 
 import java.sql.Date;
 import java.time.LocalDate;
+import java.util.ArrayList;
 
 public class test {
+    static AlphaVantage alphaVantage;
+    static KeyReader keyReader;
     public static void main(String[] args) {
 
-        User user = new User("9906220182", "kelly");
+        keyReader = new KeyReader("Alpha");
+        alphaVantage = new AlphaVantage(keyReader.getAPIKey());
+        //Stock stock = alphaVantage.companyOverview("IBM");
+
+        //System.out.println(stock.getSector());
+
+        ArrayList<Stock> stocks = alphaVantage.timeSeriesDailyAdjusted("IBM");
+        System.out.println(stocks.get(0).getDate());
+        System.out.println(stocks.get(0).getPrice());
+        System.out.println(stocks.get(0).getSymbol());
+        System.out.println(stocks.size());
+        System.out.println(stocks.get(50).getPrice());
+
+        /*User user = new User("9906220182", "kelly");
         user.setIdSalt("10");
         user.setPasSalt("5");
 
@@ -90,6 +108,7 @@ public class test {
         sqLite.insertFactStock(stock3);
         sqLite.insertFactStock(stock3);
         sqLite.insertDimStock(stock3);
+*/
 
 
 

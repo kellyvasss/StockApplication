@@ -5,12 +5,15 @@ import okhttp3.Response;
 import org.json.JSONObject;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
+import stock.Stock;
+import stock.StockBuilder;
 
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 public class AlphaVantage {
     private String key = "";
@@ -23,31 +26,30 @@ public class AlphaVantage {
         client = new OkHttpClient();
     }
 
-    public String companyOverview(String symbol) {
-        // Denna kommer låta användaren söka på en ticket och den genererar bolagsbeskrivning, fullständigt namn,
-        // sektor, land, symbol, targetprice, currency, genomsnitt för 50 och 200 MA (moving average), utdelningsdag,
-        // 52 veckors högsta och lägsta kurs
-        // Den kräver parametrarna function, symbol och apikey.
+    // KLAR
+    public Stock companyOverview(String symbol) {
         String function = "OVERVIEW";
         String url = base_url + function + "&symbol=" + symbol + "&apikey=" + key;
-
         Request request = new Request.Builder()
                 .url(url)
                 .get()
                 .build();
-        // Nu funkar denna metoden. Jag behöver bara lägga till vad jag vill få fram, ex jsonNode.get("Currency").asText(), osv.
         try (Response response = client.newCall(request).execute()) {
             if (response.isSuccessful()) {
                 String json =  response.body().string();
-
-
-
                 ObjectMapper objectMapper = new ObjectMapper();
-
                 JsonNode jsonNode = objectMapper.readTree(json);
-
-
-                return jsonNode.get("Sector").asText() + "\n" + jsonNode.get("Description").asText();
+                Stock stock = new StockBuilder()
+                        .symbol(jsonNode.get("Symbol").asText())
+                        .name(jsonNode.get("Name").asText())
+                        .description(jsonNode.get("Description").asText())
+                        .exchange(jsonNode.get("Exchange").asText())
+                        .currency(jsonNode.get("Currency").asText())
+                        .country(jsonNode.get("Country").asText())
+                        .sector(jsonNode.get("Sector").asText())
+                        .industry(jsonNode.get("Industry").asText())
+                        .build();
+                return stock;
             } else {
                 throw new IOException("Wrong symbol");
             }
@@ -56,7 +58,7 @@ public class AlphaVantage {
         }
     }
 
-    public String quote(String symbol) {
+  /*  public Stock quote(String symbol) {
         // Denna visar information om senaste försäljningspriset, open, high, low, antal aktier handlade, förändring
         // i pris i pengar och procent jämnfört med förgående dag.
         String function = "GLOBAL_QUOTE";
@@ -83,10 +85,10 @@ public class AlphaVantage {
         } catch (IOException e) {
             return null;
         }
-    }
-    public String timeSeriesDaily(String symbol) {
-        // Denna visar information om försäljningspriset, open, high, low, antal aktier handlade, förändring
-        // för så lång till tillbaka det sträcker sig. Resultat är dagligt uppdaterad
+    }*/
+
+    // sparar alla pris och datum för sökningen. KLAR
+    public ArrayList<Stock> timeSeriesDailyAdjusted(String symbol) {
         String function = "TIME_SERIES_DAILY_ADJUSTED";
         String url = base_url + function + "&symbol=" + symbol + "&apikey=" + key;
 
@@ -94,17 +96,36 @@ public class AlphaVantage {
                 .url(url)
                 .get()
                 .build();
-        // Nu funkar denna metoden. Jag behöver bara lägga till vad jag vill få fram, ex jsonNode.get("Currency").asText(), osv.
+
         try (Response response = client.newCall(request).execute()) {
             if (response.isSuccessful()) {
-                String json =  response.body().string();
+                String json = response.body().string();
 
                 ObjectMapper objectMapper = new ObjectMapper();
-
                 JsonNode jsonNode = objectMapper.readTree(json);
 
-                // ändra detta
-                return jsonNode.get("Sector").asText();
+                ArrayList<Stock> stocks = new ArrayList<>();
+
+                JsonNode timeSeriesNode = jsonNode.get("Time Series (Daily)");
+                if (timeSeriesNode != null) {
+                    Iterator<Map.Entry<String, JsonNode>> iterator = timeSeriesNode.fields();
+                    while (iterator.hasNext()) {
+                        Map.Entry<String, JsonNode> entry = iterator.next();
+                        String date = entry.getKey();
+                        JsonNode dateData = entry.getValue();
+                        if (dateData != null && dateData.has("5. adjusted close")) {
+                            String adjustedClose = dateData.get("5. adjusted close").asText();
+                            Stock stock = new StockBuilder()
+                                    .date(date)
+                                    .price(Double.valueOf(adjustedClose))
+                                    .symbol(symbol)
+                                    .build();
+                            stocks.add(stock);
+                        }
+                    }
+                }
+
+                return stocks;
             } else {
                 throw new IOException("Wrong symbol");
             }
@@ -112,6 +133,7 @@ public class AlphaVantage {
             return null;
         }
     }
+
     public List<String> searchEndpoint(String keyword) {
         String function = "SYMBOL_SEARCH";
         String url = base_url + function + "&keywords=" + keyword + "&apikey=" + key;
