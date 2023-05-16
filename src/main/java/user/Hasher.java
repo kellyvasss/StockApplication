@@ -7,18 +7,12 @@ import java.security.SecureRandom;
 public class Hasher {
 
     // Hashar en valfri string
-    public static String hash(String raw) {
-
-        ByteSource salt = generateSalt();
-
+    public static String hash(String raw, ByteSource salt) {
         String hashedPassword = new SimpleHash("SHA-256", raw, salt, 100).toHex();
-
         return hashedPassword;
-
     }
     // Genererar random byte
     public static ByteSource generateSalt() {
-
         SecureRandom random = new SecureRandom();
         byte[] saltBytes = new byte[16];
         random.nextBytes(saltBytes);

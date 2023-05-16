@@ -114,7 +114,10 @@ public class SQLite {
     public void createTableDimMarket() {
         String sql = "CREATE TABLE IF NOT EXISTS dim_market (\n"
                 + "id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
-                + "name VARCHAR(10) UNIQUE);";
+                + "name VARCHAR(10) UNIQUE),\n"
+                + "open VARCHAR(5),\n"
+                + "close VARCHAR(5),\n"
+                + "note VARCHAR(30);";
         tryStatement(sql);
     }
     public void createTableUser() {
