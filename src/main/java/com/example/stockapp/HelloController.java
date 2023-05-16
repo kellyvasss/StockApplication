@@ -49,7 +49,7 @@ public class HelloController {
         welcomeText.setText("Welcome to JavaFX Application!");
         result.setText(hash.hasha("oooooooooooooooooooooooooooooooooooooooooo"));
 
-        result.setText(alphaVantage.searchEndpoint("apple").toString());
+       // result.setText(alphaVantage.searchEndpoint("apple").toString());
 
     }
 }

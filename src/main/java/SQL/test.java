@@ -28,6 +28,8 @@ public class test {
         System.out.println(stocks.get(0).getSymbol());
         System.out.println(stocks.size());
         System.out.println(stocks.get(50).getPrice());
+        System.out.println(alphaVantage.quote("BA"));
+        System.out.println(alphaVantage.searchEndpoint("he"));
 
         /*User user = new User("9906220182", "kelly");
         user.setIdSalt("10");

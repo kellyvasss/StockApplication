@@ -58,7 +58,7 @@ public class AlphaVantage {
         }
     }
 
-  /*  public Stock quote(String symbol) {
+    public String quote(String symbol) {
         // Denna visar information om senaste försäljningspriset, open, high, low, antal aktier handlade, förändring
         // i pris i pengar och procent jämnfört med förgående dag.
         String function = "GLOBAL_QUOTE";
@@ -68,7 +68,7 @@ public class AlphaVantage {
                 .url(url)
                 .get()
                 .build();
-        // Nu funkar denna metoden. Jag behöver bara lägga till vad jag vill få fram, ex jsonNode.get("Currency").asText(), osv.
+
         try (Response response = client.newCall(request).execute()) {
             if (response.isSuccessful()) {
                 String json =  response.body().string();
@@ -76,16 +76,23 @@ public class AlphaVantage {
                 ObjectMapper objectMapper = new ObjectMapper();
 
                 JsonNode jsonNode = objectMapper.readTree(json);
+                JsonNode get = jsonNode.get("Global Quote");
 
-                // ändra detta
-                return jsonNode.get("Sector").asText();
+                return  "Last trading price: " + get.get("05. price").asText()
+                        + "\nOpen: " + get.get("02. open").asText()
+                        + "\nHigh: " + get.get("03. high").asText()
+                        + "\nLow: " + get.get("04. low").asText()
+                        + "\nVolume: " + get.get("06. volume").asText()
+                        + "\nLatest trading day: " + get.get("07. latest trading day").asText()
+                        + "\nPrevious close: " + get.get("08. previous close").asText();
+
             } else {
                 throw new IOException("Wrong symbol");
             }
         } catch (IOException e) {
             return null;
         }
-    }*/
+    }
 
     // sparar alla pris och datum för sökningen. KLAR
     public ArrayList<Stock> timeSeriesDailyAdjusted(String symbol) {
@@ -124,7 +131,6 @@ public class AlphaVantage {
                         }
                     }
                 }
-
                 return stocks;
             } else {
                 throw new IOException("Wrong symbol");
@@ -134,7 +140,7 @@ public class AlphaVantage {
         }
     }
 
-    public List<String> searchEndpoint(String keyword) {
+    public String searchEndpoint(String keyword) {
         String function = "SYMBOL_SEARCH";
         String url = base_url + function + "&keywords=" + keyword + "&apikey=" + key;
 
@@ -143,6 +149,7 @@ public class AlphaVantage {
                 .get()
                 .build();
 
+        String result = "";
         try (Response response = client.newCall(request).execute()) {
             if (response.isSuccessful()) {
                 String json = response.body().string();
@@ -150,18 +157,18 @@ public class AlphaVantage {
                 ObjectMapper objectMapper = new ObjectMapper();
                 JsonNode jsonNode = objectMapper.readTree(json);
 
-                List<String> names = new ArrayList<>();
-
                 JsonNode matchesNode = jsonNode.get("bestMatches");
                 for (JsonNode matchNode : matchesNode) {
-                    JsonNode nameNode = matchNode.get("2. name");
-                    if (nameNode != null && !nameNode.isNull()) {
-                        String name = nameNode.asText();
-                        names.add(name);
-                    }
+                    result += "Symbol: " + matchNode.get("1. symbol").asText()
+                            + "\nName: " + matchNode.get("2. name").asText()
+                            + "\nType: " + matchNode.get("3. type").asText()
+                            + "\nCountry: " + matchNode.get("4. region").asText()
+                            + "\nTrading hours: " + matchNode.get("5. marketOpen").asText()
+                            + " - " + matchNode.get("6. marketClose").asText()
+                            + "\nCurrency: " + matchNode.get("8. currency").asText()
+                            + "\n----------------------------\n";
                 }
-
-                return names;
+                return result;
             } else {
                 throw new IOException("Wrong symbol");
             }
