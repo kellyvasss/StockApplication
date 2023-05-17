@@ -22,7 +22,7 @@ public class Statements {
         static String selectID = "SELECT id FROM dim_stock WHERE symbol=?";
         static String create = "CREATE TABLE IF NOT EXISTS dim_stock (\n"
                 + "id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
-                + "symbol VARCHAR(6) UNIQUE,\n"
+                + "symbol VARCHAR(10) UNIQUE,\n"
                 + "name VARCHAR(50),\n"
                 + "description TEXT,\n"
                 + "market_id INTEGER,\n"
@@ -74,7 +74,7 @@ public class Statements {
                 + "name VARCHAR(10) UNIQUE,\n"
                 + "open VARCHAR(5),\n"
                 + "close VARCHAR(5),\n"
-                + "note VARCHAR(75);";
+                + "note VARCHAR(75));";
 
     }
 
@@ -112,19 +112,42 @@ public class Statements {
     }
 
     static class FactTransaction {
-        static String create = "CREATE TABLE IF NOT EXISTS fact_transaction (\n"
+        // ändra dim_stock till d, fact_in till in, fact_out till out
+        static String getUserStatus = "SELECT d.name, d.symbol, in.quantity - in.price,"
+        static String create = "CREATE TABLE IF NOT EXISTS fact_transaction_in (\n"
                 + "id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
                 + "user_id INTEGER NOT NULL,\n"
                 + "stock_id INTEGER NOT NULL,\n"
                 + "date DATE NOT NULL,\n"
                 + "quantity INTEGER NOT NULL,\n"
-                + "buy/sell VARCHAR(1) NOT NULL,\n"
                 + "price DECIMAL NOT NULL,\n"
+                + "approxValue DECIMAL,\n"
                 + "FOREIGN KEY (user_id) REFERENCES dim_user(id),\n"
-                + "FOREIGN KEY (stock_id) REFERENCES dim_stock(stock_id)\n"
+                + "FOREIGN KEY (stock_id) REFERENCES dim_stock(id),\n"
+                + "UNIQUE(user_id, stock_id)"
                 + ");";
         static String insert = "INSERT INTO fact_transaction(user_id, stock_id, date, \n"
-                + "quantity, buy/sell, price) VALUES(?,?,?,?,?,?)";
+                + "quantity, price) VALUES(?,?,?,?,?)";
+        static String createSell = "CREATE TABLE IF NOT EXISTS fact_transaction_out (\n"
+                + "id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
+                + "user_id INTEGER NOT NULL,\n"
+                + "stock_id INTEGER NOT NULL,\n"
+                + "buy_id INTEGER NOT NULL UNIQUE,\n"
+                + "date DATE NOT NULL,\n"
+                + "quantity INTEGER NOT NULL,\n"
+                + "price DECIMAL NOT NULL,\n"
+                + "FOREIGN KEY (user_id) REFERENCES dim_user(id),\n"
+                + "FOREIGN KEY (stock_id) REFERENCES dim_stock(id),\n"
+                + "FOREIGN KEY (buy_id) REFERENCES fact_transaction_in(id));";
+        static String insertSell = "INSERT INTO fact_transaction_out(user_id, stock_id, \n"
+                + "buy_id, date, quantity, price) VALUES(?,?,?,?,?,?)";
+        static String getBuyID = "SELECT id FROM fact_transaction_in WHERE user_id=? AND stock_id=?";
+        static String updateBuy = "UPDATE fact_transaction_in\n"
+                + "SET quantity = quantity + ?, price =price + ?\n"
+                + "WHERE user_id=? AND stock_id=?;";
+        static String updateSell = "UPDATE fact_transaction_out\n"
+                + "SET quantity = quantity + ?, price = price + ?\n"
+                + "WHERE user_id = ? AND buy_id = ?;";
 
     }
 

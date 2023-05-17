@@ -26,19 +26,18 @@ public class test {
 
         //System.out.println(stock.getSector());
 
-       /* ArrayList<Stock> stocks = alphaVantage.timeSeriesDailyAdjusted("IBM");
+        ArrayList<Stock> stocks = alphaVantage.timeSeriesDailyAdjusted("IBM");
         System.out.println(stocks.get(0).getDate());
         System.out.println(stocks.get(0).getPrice());
         System.out.println(stocks.get(0).getSymbol());
         System.out.println(stocks.size());
         System.out.println(stocks.get(50).getPrice());
         System.out.println(alphaVantage.quote("BA"));
-        System.out.println(alphaVantage.searchEndpoint("he"));*/
+        System.out.println(alphaVantage.searchEndpoint("he"));
 
         //System.out.println(alphaVantage.getMarkets().toString());
 
-        /*User user = new User("9906220182", "kelly");
-        user.setIdSalt("10");
+        User user = new User("9906220182", "kelly");
         user.setPasSalt("5");
 
         Portfolio portfolio = new Portfolio();
@@ -76,7 +75,8 @@ public class test {
         sqLite.createTableDimSector();
         sqLite.createTableDimStock();
         sqLite.createTableFactStockPrice();
-        sqLite.createTableFactTransaction();
+        sqLite.createTableFactTransactionIn();
+        sqLite.createTableFactTransactionOut();
         String pas = hash.hasha(user.getPassword());
         sqLite.insertUser(user);
         sqLite.insertPortfolio(portfolio,user);
@@ -116,7 +116,7 @@ public class test {
         sqLite.insertFactStock(stock3);
         sqLite.insertFactStock(stock3);
         sqLite.insertDimStock(stock3);
-*/
+
 
 
 

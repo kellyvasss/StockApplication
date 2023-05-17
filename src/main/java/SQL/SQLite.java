@@ -9,15 +9,10 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class SQLite {
-
     Connection conn = null;
-
     String dbName = "";
-
     public SQLite(String dbName) {
         this.dbName = dbName;
-
-
         try {
             conn = DriverManager.getConnection("jdbc:sqlite:" + dbName + ".db");
         } catch (SQLException e) {
@@ -40,7 +35,9 @@ public class SQLite {
     public void createTableFactTransactionIn() {
         tryStatement(Statements.FactTransaction.create);
     }
-
+    public void createTableFactTransactionOut() {
+        tryStatement(Statements.FactTransaction.createSell);
+    }
     public void createTableDimCurrency() {
         tryStatement(Statements.DimCurrency.create);
     }
@@ -92,7 +89,7 @@ public class SQLite {
             succes = false;
         } return succes;
     }
-   public Boolean insertTransaction(User user, Integer quantity, Double price, String symbol, String c) {
+   public Boolean insertTransaction(User user, Integer quantity, Double price, String symbol) {
         Boolean succes = true;
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH:mm");
         LocalDateTime now = LocalDateTime.now();
@@ -103,13 +100,72 @@ public class SQLite {
             prepared.setInt(2, stock(symbol));
             prepared.setString(3, date);
             prepared.setInt(4, quantity);
-            prepared.setString(5, c);
-            prepared.setDouble(6, price);
+            prepared.setDouble(5, price);
             prepared.executeUpdate();
         } catch (SQLException e) {
-            System.out.println("fel med att insert into fact_transaction " + e.getMessage());
+            System.out.println("fel med att insert into fact_transaction_in " + e.getMessage());
             succes = false;
         } return succes;
+    }
+    public Boolean insertTransactionOut(User user, Integer quantity, Double price, String symbol) {
+        Boolean succes = true;
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH:mm");
+        LocalDateTime now = LocalDateTime.now();
+        String date = dtf.format(now);
+        Integer buy_id = getBuyID(user,symbol);
+        try {
+            PreparedStatement prepared = conn.prepareStatement(Statements.FactTransaction.insertSell);
+            prepared.setInt(1,security(user));
+            prepared.setInt(2, stock(symbol));
+            prepared.setInt(3, buy_id);
+            prepared.setString(4, date);
+            prepared.setInt(5,quantity);
+            prepared.setDouble(6,price);
+            prepared.executeUpdate();
+        } catch (SQLException e) {
+            System.out.println("fel med att insert into fact_transaction_out " + e.getMessage());
+            succes = false;
+        } return succes;
+    }
+    public Boolean updateBuy(Integer quantity, Double price, User user, String symbol) {
+        Boolean succes = true;
+        try {
+            PreparedStatement prepared = conn.prepareStatement(Statements.FactTransaction.updateBuy);
+            prepared.setInt(1, quantity);
+            prepared.setDouble(2, price);
+            prepared.setInt(3, security(user));
+            prepared.setInt(4, stock(symbol));
+            prepared.executeUpdate();
+        } catch (SQLException e) {
+            System.out.println("fel med att update fact_transaction_in " + e.getMessage());
+            succes = false;
+        } return succes;
+    }
+    public Boolean updateSell(Integer quantity, Double price, User user, String symbol) {
+        Boolean succes = true;
+        try {
+            PreparedStatement prepared = conn.prepareStatement(Statements.FactTransaction.updateSell);
+            prepared.setInt(1, quantity);
+            prepared.setDouble(2, price);
+            prepared.setInt(3, security(user));
+            prepared.setInt(4, getBuyID(user,symbol));
+        } catch (SQLException e) {
+            System.out.println("fel med att update fact_transaction_out " + e.getMessage());
+            succes = false;
+        } return succes;
+    }
+    public Integer getBuyID(User user, String symbol) {
+        try {
+            PreparedStatement prepared = conn.prepareStatement(Statements.FactTransaction.getBuyID);
+            prepared.setInt(1, security(user));
+            prepared.setInt(2, stock(symbol));
+            ResultSet rs = prepared.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("id");
+            }
+        } catch (SQLException e) {
+            System.out.println("fel med att hämta buy_id från fact_transaction_in");
+        } return null;
     }
     public Boolean insertPortfolio(Portfolio portfolio, User user) {
         Boolean succes = true;
@@ -221,9 +277,8 @@ public class SQLite {
     }
     // funkar
     public Integer stock(Stock stock) {
-        String sql = Statements.DimStock.selectID;
         try {
-            PreparedStatement p = conn.prepareStatement(sql);
+            PreparedStatement p = conn.prepareStatement(Statements.DimStock.selectID);
             p.setString(1,stock.getSymbol());
             ResultSet rs = p.executeQuery();
             if (rs.next()) {
@@ -242,7 +297,6 @@ public class SQLite {
         } return null;
     }
     public Integer stock(String symbol) {
-
         try {
             PreparedStatement p = conn.prepareStatement(Statements.DimStock.selectID);
             p.setString(1,symbol);
@@ -257,9 +311,8 @@ public class SQLite {
     }
     // funkar
     private void insertCurrency(Stock stock) {
-        String sql = Statements.DimCurrency.insert;
         try {
-            PreparedStatement p = conn.prepareStatement(sql);
+            PreparedStatement p = conn.prepareStatement(Statements.DimCurrency.insert);
             p.setString(1, stock.getCurrency());
             p.executeUpdate();
             p.close();
@@ -269,9 +322,8 @@ public class SQLite {
     }
     // funkar
     public Integer currency(Stock stock) {
-        String sql = Statements.DimCurrency.selectID;
         try {
-            PreparedStatement p = conn.prepareStatement(sql);
+            PreparedStatement p = conn.prepareStatement(Statements.DimCurrency.selectID);
             p.setString(1, stock.getCurrency());
             ResultSet rs = p.executeQuery();
             if (rs.next()) {
