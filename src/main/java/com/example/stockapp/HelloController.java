@@ -23,7 +23,7 @@ public class HelloController {
       //  keyReader = new KeyReader("Alpha");
        // alphaVantage = new AlphaVantage(keyReader.getAPIKey());
        // mySQL = new MySQL("root", keyReader.getKey());
-        sqLite = new SQLite("hej");
+      /*  sqLite = new SQLite("hej");
         sqLite.createTableUser();
         sqLite.createTablePortfolio();
         sqLite.createTableCountry();
@@ -38,7 +38,7 @@ public class HelloController {
         result = new TextArea();
         result.setText(pas);
 
-
+*/
 
     }
 

@@ -60,7 +60,9 @@ public class AlphaVantage {
         }
     }
 
-    public String quote(String symbol) {
+    // För att få fram all information index = 0, för att få fram enbart senaste pris, index = 1
+    // För att få fram aktuell symbol, index = 2
+    public Object[] quote(String symbol) {
         // Denna visar information om senaste försäljningspriset, open, high, low, antal aktier handlade, förändring
         // i pris i pengar och procent jämnfört med förgående dag.
         String function = "GLOBAL_QUOTE";
@@ -74,19 +76,20 @@ public class AlphaVantage {
         try (Response response = client.newCall(request).execute()) {
             if (response.isSuccessful()) {
                 String json =  response.body().string();
-
                 ObjectMapper objectMapper = new ObjectMapper();
-
                 JsonNode jsonNode = objectMapper.readTree(json);
-                JsonNode get = jsonNode.get("Global Quote");
 
-                return  "Last trading price: " + get.get("05. price").asText()
+                JsonNode get = jsonNode.get("Global Quote");
+                String str =  "Last trading price: " + get.get("05. price").asText()
                         + "\nOpen: " + get.get("02. open").asText()
                         + "\nHigh: " + get.get("03. high").asText()
                         + "\nLow: " + get.get("04. low").asText()
                         + "\nVolume: " + get.get("06. volume").asText()
                         + "\nLatest trading day: " + get.get("07. latest trading day").asText()
                         + "\nPrevious close: " + get.get("08. previous close").asText();
+                Double price = get.get("05. price").asDouble();
+                Object[] r = {str,price,symbol};
+                return r;
 
             } else {
                 throw new IOException("Wrong symbol");
@@ -219,7 +222,7 @@ public class AlphaVantage {
         }
         return markets;
     }
-    // Returnerar priset att * med USD?
+    // Returnerar priset att * med USD
     // 1 jpy = 0,00730674 USD
     // 100 * 0,00730674 = 0,730674 USD
     public Double currencyConverter(String fromCurrency) {

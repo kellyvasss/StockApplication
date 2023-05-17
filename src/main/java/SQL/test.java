@@ -18,9 +18,10 @@ public class test {
 
         keyReader = new KeyReader("Alpha");
         alphaVantage = new AlphaVantage(keyReader.getAPIKey());
-        Stock stock = alphaVantage.companyOverview("IBM");
-        System.out.println(alphaVantage.currencyConverter("JPY"));
-        System.out.println(alphaVantage.searchEndpoint("BTC"));
+       // Stock stock = alphaVantage.companyOverview("IBM");
+       // System.out.println(alphaVantage.currencyConverter("JPY"));
+       // System.out.println(alphaVantage.searchEndpoint("BTC"));
+        System.out.println(alphaVantage.quote("IBM")[1]);
 
 
         //System.out.println(stock.getSector());
