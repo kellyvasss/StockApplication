@@ -3,7 +3,6 @@ package SQL;
 import stock.Portfolio;
 import stock.Stock;
 import user.User;
-
 import java.sql.*;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
@@ -52,18 +51,21 @@ public class SQLite {
 
         tryStatement(sql);
     }
-    public void createTableFactTransaction() {
+    public void createTableFactTransactionIn() {
         String sql = "CREATE TABLE IF NOT EXISTS fact_transaction (\n"
                 + "id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
                 + "portfolio_id INTEGER NOT NULL,\n"
                 + "stock_id INTEGER NOT NULL,\n"
                 + "date DATE,\n"
+                + "quantity INTEGER,\n"
+                + "buy/sell VARCHAR(1),\n"
                 + "FOREIGN KEY (portfolio_id) REFERENCES dim_portfolio(id),\n"
                 + "FOREIGN KEY (stock_id) REFERENCES fact_StockPrice(stock_id),\n"
                 + "FOREIGN KEY (date) REFERENCES fact_StockPrice(date)\n"
                 + ");";
         tryStatement(sql);
     }
+
     public void createTableDimCurrency() {
         String sql = "CREATE TABLE IF NOT EXISTS dim_currency (\n"
                 + "id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
@@ -114,10 +116,10 @@ public class SQLite {
     public void createTableDimMarket() {
         String sql = "CREATE TABLE IF NOT EXISTS dim_market (\n"
                 + "id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
-                + "name VARCHAR(10) UNIQUE),\n"
+                + "name VARCHAR(10) UNIQUE,\n"
                 + "open VARCHAR(5),\n"
                 + "close VARCHAR(5),\n"
-                + "note VARCHAR(30);";
+                + "note VARCHAR(75);";
         tryStatement(sql);
     }
     public void createTableUser() {
@@ -126,8 +128,7 @@ public class SQLite {
                 + "person_id VARCHAR(10) UNIQUE,\n"
                 + "password TEXT,\n"
                 + "email VARCHAR(50),\n"
-                + "pas_salt VARCHAR(16),"
-                + "id_salt VARCHAR(16)"
+                + "pas_salt VARCHAR(16)"
                 + ");";
         tryStatement(sql);
     }
@@ -145,15 +146,15 @@ public class SQLite {
         }
         return sec;
     }
+
     public Boolean insertUser(User user) {
         Boolean succes = true;
-        String sql = "INSERT INTO dim_user(person_id, password, pas_salt, id_salt) VALUES(?,?,?,?)";
+        String sql = "INSERT INTO dim_user(person_id, password, pas_salt) VALUES(?,?,?)";
         try {
             PreparedStatement prepared = conn.prepareStatement(sql);
             prepared.setString(1, user.getPerson_id());
             prepared.setString(2,user.getPassword());
             prepared.setString(3, user.getPasSalt());
-            prepared.setString(4, user.getIdSalt());
             prepared.executeUpdate();
         } catch (SQLException e) {
             System.out.println("fel med att lägga till user i dim_user. " + e.getMessage());
@@ -318,7 +319,7 @@ public class SQLite {
     }
     // funkar
     public Integer currency(Stock stock) {
-        String sql = "SELECT id FROM dim_currency WHERE currency=?";
+        String sql = Statements.DimCurrency.selectID;
         try {
             PreparedStatement p = conn.prepareStatement(sql);
             p.setString(1, stock.getCurrency());
@@ -327,7 +328,7 @@ public class SQLite {
                 return rs.getInt("id");
             } else {
                 insertCurrency(stock);
-                String sqlCount = "SELECT COUNT(*) id FROM dim_currency;";
+                String sqlCount = Statements.DimCurrency.count;
                 PreparedStatement ps = conn.prepareStatement(sqlCount);
                 ResultSet r = ps.executeQuery();
                 if (r.next()) {
@@ -345,9 +346,7 @@ public class SQLite {
         Integer country = insertCountry(stock);
         Integer sector = insertSector(stock);
         Integer industry = insertIndustry(stock);
-        String sql = "INSERT INTO dim_stock(symbol,name,description,"
-                + "market_id,country_id,sector_id,industry_id) "
-                + "VALUES(?,?,?,?,?,?,?)";
+        String sql = Statements.DimStock.insertDimStock;
         try {
             PreparedStatement prepared = conn.prepareStatement(sql);
             prepared.setString(1, stock.getSymbol());
@@ -367,8 +366,7 @@ public class SQLite {
     public void insertFactStock(Stock s) {
         Integer stock = stock(s);
         Integer currency = currency(s);
-        String sql = "INSERT INTO fact_StockPrice(stock_id, date, price, currency_id) "
-                + "VALUES(?,?,?,?)";
+        String sql = Statements.FactStock.insertFactStock;
         try {
             PreparedStatement p = conn.prepareStatement(sql);
             p.setInt(1, stock);
@@ -380,5 +378,43 @@ public class SQLite {
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
+    }
+    private static class Statements {
+        static class FactStock {
+            static String insertFactStock = "INSERT INTO fact_StockPrice(stock_id, date, price, currency_id) "
+                    + "VALUES(?,?,?,?)";
+        }
+        static class DimStock {
+            static String insertDimStock = "INSERT INTO dim_stock(symbol,name,description,"
+                    + "market_id,country_id,sector_id,industry_id) "
+                    + "VALUES(?,?,?,?,?,?,?)";
+        }
+        static class DimIndustry {
+
+        }
+        static class DimCurrency {
+            static String selectID = "SELECT id FROM dim_currency WHERE currency=?";
+            static String count = "SELECT COUNT(*) id FROM dim_currency;";
+        }
+        static class DimCountry {
+
+        }
+        static class DimMarket {
+
+        }
+        static class DimSector {
+
+        }
+        static class DimPortfolio {
+
+        }
+        static class DimUser {
+
+        }
+        static class FactTransaction {
+
+        }
+
+
     }
 }

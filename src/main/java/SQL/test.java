@@ -18,7 +18,10 @@ public class test {
 
         keyReader = new KeyReader("Alpha");
         alphaVantage = new AlphaVantage(keyReader.getAPIKey());
-        //Stock stock = alphaVantage.companyOverview("IBM");
+        Stock stock = alphaVantage.companyOverview("IBM");
+        System.out.println(alphaVantage.currencyConverter("JPY"));
+        System.out.println(alphaVantage.searchEndpoint("BTC"));
+
 
         //System.out.println(stock.getSector());
 
@@ -33,7 +36,6 @@ public class test {
 
         //System.out.println(alphaVantage.getMarkets().toString());
 
-        System.out.println(alphaVantage.currencyConverter("USD", "JPY"));
         /*User user = new User("9906220182", "kelly");
         user.setIdSalt("10");
         user.setPasSalt("5");

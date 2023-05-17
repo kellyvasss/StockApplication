@@ -10,7 +10,6 @@ public class User {
     private String password;
     private String email;
     private String pasSalt;
-    private String idSalt;
 
     private ArrayList<Portfolio> portfolios;
     public User() {
@@ -62,15 +61,10 @@ public class User {
         return pasSalt;
     }
 
-    public String getIdSalt() {
-        return idSalt;
-    }
+
 
     public void setPasSalt(String pasSalt) {
         this.pasSalt = pasSalt;
     }
 
-    public void setIdSalt(String idSalt) {
-        this.idSalt = idSalt;
-    }
 }
