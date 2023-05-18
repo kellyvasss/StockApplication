@@ -1,6 +1,7 @@
 package SQL;
 import api.AlphaVantage;
 import api.KeyReader;
+import stock.Market;
 import stock.Portfolio;
 import stock.Stock;
 import stock.StockBuilder;
@@ -18,30 +19,11 @@ public class test {
 
         keyReader = new KeyReader("Alpha");
         alphaVantage = new AlphaVantage(keyReader.getAPIKey());
-       // Stock stock = alphaVantage.companyOverview("IBM");
-       // System.out.println(alphaVantage.currencyConverter("JPY"));
-       // System.out.println(alphaVantage.searchEndpoint("BTC"));
-        System.out.println(alphaVantage.quote("IBM")[1]);
-
-
-        //System.out.println(stock.getSector());
-
-        ArrayList<Stock> stocks = alphaVantage.timeSeriesDailyAdjusted("IBM");
-        System.out.println(stocks.get(0).getDate());
-        System.out.println(stocks.get(0).getPrice());
-        System.out.println(stocks.get(0).getSymbol());
-        System.out.println(stocks.size());
-        System.out.println(stocks.get(50).getPrice());
-        System.out.println(alphaVantage.quote("BA"));
-        System.out.println(alphaVantage.searchEndpoint("he"));
-
-        //System.out.println(alphaVantage.getMarkets().toString());
-
+        //Stock stock = alphaVantage.companyOverview("IBM");
         User user = new User("9906220182", "kelly");
         user.setPasSalt("5");
-
-        Portfolio portfolio = new Portfolio();
-        Stock stock = new StockBuilder()
+        User user1 = new User("0000000000", "testperson");
+        Stock stock3 = new StockBuilder()
                 .currency("USD")
                 .exchange("NYSE")
                 .industry("Tech")
@@ -49,25 +31,22 @@ public class test {
                 .symbol("ABC")
                 .build();
         Stock stock1 = new StockBuilder()
-                .currency("USD")
-                .name("Apple INC")
+                .currency("EUR")
+                .name("Testforuser1")
                 .description("This is a apple company that sells electronic products")
                 .country("USA")
                 .sector("Tv and Tele")
                 .exchange("NYSE")
                 .industry("Tech")
-                .price(79.5)
-                .symbol("123")
+                .price(100.0)
+                .symbol("HELLOT")
                 .build();
-        System.out.println(stock1.getExchange());
 
-        portfolio.setName("Hej");
-        portfolio.setStock(stock);
-        portfolio.setStock(stock1);
 
-        SQLite sqLite = new SQLite("Testt");
+
+
+        SQLite sqLite = new SQLite("i");
         sqLite.createTableUser();
-        sqLite.createTablePortfolio();
         sqLite.createTableCountry();
         sqLite.createTableDimCurrency();
         sqLite.createTableDimIndustry();
@@ -78,45 +57,36 @@ public class test {
         sqLite.createTableFactTransactionIn();
         sqLite.createTableFactTransactionOut();
         String pas = hash.hasha(user.getPassword());
-        sqLite.insertUser(user);
-        sqLite.insertPortfolio(portfolio,user);
-        System.out.println(LocalDate.now());
-        LocalDate today = LocalDate.now();
-        Date date = Date.valueOf(today);
-        System.out.println(date);
-        sqLite.insertDimStock(stock1);
+        //sqLite.insertUser(user1);
+        /*ArrayList<Market> allMarkets = alphaVantage.getMarkets();
+        for (Market m : allMarkets) {
+            sqLite.insertMarket(m);
+        }*/
 
-        Stock stock2 = new StockBuilder()
-                .country("Canada")
-                .sector("Vegetarian and Vegan")
-                .exchange("NASDAQ")
-                .industry("Food")
-                .description("This is a test company")
-                .name("HEje")
-                .price(14.5)
-                .currency("EUR")
-                .symbol("DATE")
-                .date("2022-02-01")
-                .build();
-        sqLite.insertDimStock(stock2);
-        sqLite.insertFactStock(stock2);
-        sqLite.insertFactStock(stock2);
-        Stock stock3 = new StockBuilder()
-                .country("Spain")
-                .sector("Makeup")
-                .exchange("NASDAQ")
-                .industry("Cosmetique")
-                .description("This is a test company")
-                .name("Test AB")
-                .price(14.5)
-                .currency("EUR")
-                .symbol("Loreal")
-                .date("2022-02-01")
-                .build();
-        sqLite.insertFactStock(stock3);
-        sqLite.insertFactStock(stock3);
-        sqLite.insertDimStock(stock3);
+        //sqLite.insertDimStock(stock1);
 
+        ArrayList<Stock> stocks = alphaVantage.timeSeriesDailyAdjusted("BRA.FRK");
+        Stock AAPL = alphaVantage.companyOverview("BRA.FRK");
+
+        //System.out.println(alphaVantage.searchEndpoint("bra"));
+        //System.out.println(stocks.get(0).getSymbol());
+        sqLite.insertDimStock(AAPL);
+       for (Stock s: stocks) {
+           s.setCurrency(AAPL.getCurrency());
+           s.setSymbol(AAPL.getSymbol());
+           sqLite.insertFactStock(s);
+       }
+
+
+
+/*
+       sqLite.insertTransaction(user1, 10, stock1.getPrice(), stock1.getSymbol());
+        ArrayList<String> result = sqLite.getGetUserStatusHoldings(user1);
+        sqLite.insertTransactionOut(user1,1,stock1.getPrice(),stock1.getSymbol());
+        sqLite.updateBuy(10, stock1.getPrice(), user1, stock1.getSymbol());
+        sqLite.updateBuy(-100, stock1.getPrice(), user1, stock1.getSymbol());
+        System.out.println(result.get(0));
+*/
 
 
 

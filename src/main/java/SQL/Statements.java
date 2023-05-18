@@ -20,6 +20,7 @@ public class Statements {
                 + "market_id,country_id,sector_id,industry_id) "
                 + "VALUES(?,?,?,?,?,?,?)";
         static String selectID = "SELECT id FROM dim_stock WHERE symbol=?";
+        static String count = "SELECT COUNT(*) id FROM dim_stock;";
         static String create = "CREATE TABLE IF NOT EXISTS dim_stock (\n"
                 + "id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
                 + "symbol VARCHAR(10) UNIQUE,\n"
@@ -87,7 +88,7 @@ public class Statements {
                 + "name VARCHAR(30) UNIQUE);";
 
     }
-
+ // ta bort
     static class DimPortfolio {
         static String insert = "INSERT INTO dim_portfolio(name, created_at, user_id) VALUES(?, ?, ?)";
         static String create = "CREATE TABLE IF NOT EXISTS dim_portfolio (\n"
@@ -113,20 +114,29 @@ public class Statements {
 
     static class FactTransaction {
         // ändra dim_stock till d, fact_in till in, fact_out till out
-        static String getUserStatus = "SELECT d.name, d.symbol, in.quantity - in.price,"
+        static String getUserStatusHoldings = "SELECT d.name n, d.symbol s, fin.quantity q, "
+                + "fin.price p, fin.approxValue / (fin.price * fin.quantity) AS g \n"
+                + "FROM fact_transaction_in fin \n"
+                + "JOIN dim_stock d ON fin.stock_id = d.id \n"
+                + "WHERE user_id = ?";
+
+        // approxValue = försäljningspris per aktie (eller det senaste hämtade värdet) * antal holdings
+        // getValue ska bara uppdateras vid köp INTE sälj -> denna ger nya anskaffningspris/aktie
+        // getValue = (antal * pris/aktie) + (nytt antal * pris/aktie) / (antal + nytt antal)
+        // procentuella ökning = approx / (getValue*antal)
         static String create = "CREATE TABLE IF NOT EXISTS fact_transaction_in (\n"
                 + "id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
                 + "user_id INTEGER NOT NULL,\n"
                 + "stock_id INTEGER NOT NULL,\n"
                 + "date DATE NOT NULL,\n"
                 + "quantity INTEGER NOT NULL,\n"
-                + "price DECIMAL NOT NULL,\n"
-                + "approxValue DECIMAL,\n"
+                + "price DECIMAL NOT NULL,\n" // anskaffningsvärdet(getValue)
+                + "approxValue DECIMAL,\n" // pris försäljning
                 + "FOREIGN KEY (user_id) REFERENCES dim_user(id),\n"
                 + "FOREIGN KEY (stock_id) REFERENCES dim_stock(id),\n"
                 + "UNIQUE(user_id, stock_id)"
                 + ");";
-        static String insert = "INSERT INTO fact_transaction(user_id, stock_id, date, \n"
+        static String insert = "INSERT INTO fact_transaction_in(user_id, stock_id, date, \n"
                 + "quantity, price) VALUES(?,?,?,?,?)";
         static String createSell = "CREATE TABLE IF NOT EXISTS fact_transaction_out (\n"
                 + "id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
@@ -148,6 +158,7 @@ public class Statements {
         static String updateSell = "UPDATE fact_transaction_out\n"
                 + "SET quantity = quantity + ?, price = price + ?\n"
                 + "WHERE user_id = ? AND buy_id = ?;";
+
 
     }
 

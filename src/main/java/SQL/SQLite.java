@@ -1,5 +1,6 @@
 package SQL;
 
+import stock.Market;
 import stock.Portfolio;
 import stock.Stock;
 import user.User;
@@ -7,6 +8,7 @@ import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 
 public class SQLite {
     Connection conn = null;
@@ -89,6 +91,26 @@ public class SQLite {
             succes = false;
         } return succes;
     }
+    public ArrayList<String> getGetUserStatusHoldings(User user) {
+        Integer userID = security(user);
+        ArrayList<String> results = new ArrayList<>();
+        try {
+            PreparedStatement prepared = conn.prepareStatement(Statements.FactTransaction.getUserStatusHoldings);
+            prepared.setInt(1,userID);
+            ResultSet rs = prepared.executeQuery();
+            while (rs.next()) {
+                String result = "Name of stock: " + rs.getString("n")
+                        + "\nSymbol: " + rs.getString("s")
+                        + "\nQuantity: " + rs.getString("q")
+                        + "\nBuy Price: " + rs.getString("p")
+                        + "\nGrowth: " + rs.getString("g") + "%";
+
+                results.add(result);
+            }
+        } catch (SQLException e) {
+            System.out.println("fel med att hämta holdings " + e.getMessage());
+        } return results;
+    }
    public Boolean insertTransaction(User user, Integer quantity, Double price, String symbol) {
         Boolean succes = true;
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH:mm");
@@ -100,7 +122,7 @@ public class SQLite {
             prepared.setInt(2, stock(symbol));
             prepared.setString(3, date);
             prepared.setInt(4, quantity);
-            prepared.setDouble(5, price);
+            prepared.setDouble(5, price * quantity);
             prepared.executeUpdate();
         } catch (SQLException e) {
             System.out.println("fel med att insert into fact_transaction_in " + e.getMessage());
@@ -132,7 +154,7 @@ public class SQLite {
         try {
             PreparedStatement prepared = conn.prepareStatement(Statements.FactTransaction.updateBuy);
             prepared.setInt(1, quantity);
-            prepared.setDouble(2, price);
+            prepared.setDouble(2, price*quantity);
             prepared.setInt(3, security(user));
             prepared.setInt(4, stock(symbol));
             prepared.executeUpdate();
@@ -181,6 +203,19 @@ public class SQLite {
             System.out.println("fel med antagligen user implementationen... " + e.getMessage());
             succes = false;
         } return succes;
+    }
+    public void insertMarket(Market market) {
+        String insertMarket = "INSERT INTO dim_market (name, open, close, note) VALUES(?,?,?,?)";
+        try {
+            PreparedStatement p = conn.prepareStatement(insertMarket);
+            p.setString(1, market.getName());
+            p.setString(2, market.getOpen());
+            p.setString(3, market.getClose());
+            p.setString(4,market.getNote());
+            p.executeUpdate();
+        } catch (SQLException e) {
+            System.out.println("fel med insert Market " + e.getMessage());
+        }
     }
     // funkar
     public Integer insertMarket(Stock stock) {
@@ -285,8 +320,7 @@ public class SQLite {
                 return rs.getInt("id");
             } else {
                 insertDimStock(stock);
-                String sqlCount = Statements.DimCurrency.count;
-                PreparedStatement ps = conn.prepareStatement(sqlCount);
+                PreparedStatement ps = conn.prepareStatement(Statements.DimStock.count);
                 ResultSet r = ps.executeQuery();
                 if (r.next()) {
                     return r.getInt("id");
@@ -303,6 +337,8 @@ public class SQLite {
             ResultSet rs = p.executeQuery();
             if (rs.next()) {
                 return rs.getInt("id");
+            } else {
+
             }
         }
         catch (SQLException e) {
@@ -379,6 +415,7 @@ public class SQLite {
             p.close();
         } catch (SQLException e) {
             System.out.println(e.getMessage());
+            System.out.println("fel med insert Fact Stock");
         }
     }
 
