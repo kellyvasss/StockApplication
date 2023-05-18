@@ -45,7 +45,7 @@ public class test {
 
 
 
-        SQLite sqLite = new SQLite("i");
+        SQLite sqLite = new SQLite("ii");
         sqLite.createTableUser();
         sqLite.createTableCountry();
         sqLite.createTableDimCurrency();
@@ -57,7 +57,7 @@ public class test {
         sqLite.createTableFactTransactionIn();
         sqLite.createTableFactTransactionOut();
         String pas = hash.hasha(user.getPassword());
-        //sqLite.insertUser(user1);
+        sqLite.insertUser(user1);
         /*ArrayList<Market> allMarkets = alphaVantage.getMarkets();
         for (Market m : allMarkets) {
             sqLite.insertMarket(m);
@@ -76,6 +76,25 @@ public class test {
            s.setSymbol(AAPL.getSymbol());
            sqLite.insertFactStock(s);
        }
+       sqLite.insertDimStock(stock1);
+     //  sqLite.insertTransaction(user1, 10, stocks.get(0).getPrice(), stock1.getSymbol());
+      // sqLite.updateBuy(10, 80000.0, user1, stock1.getSymbol());
+
+        User u = new User("9906220101", "hej");
+        sqLite.insertUser(u);
+        sqLite.insertTransaction(u, 10, stock1.getPrice(), stock1.getSymbol());
+        sqLite.updateBuy(5, stock1.getPrice()*0.2, u, stock1.getSymbol());
+        sqLite.insertUser(user);
+        sqLite.insertTransaction(user, 10, 10.0, stock1.getSymbol());
+        sqLite.updateBuy(10, 0.5, user, stock1.getSymbol());
+        User user2 = new User("hej", "då");
+        sqLite.insertUser(user2);
+        sqLite.updateBuy(-100, 100.0, user2, stock1.getSymbol());
+        sqLite.insertTransaction(user2, 10, stock1.getPrice(), stock1.getSymbol());
+        System.out.println("HEJ");
+        System.out.println(stock1.getSymbol());
+        System.out.println(sqLite.isAllowedSell(user2, 991, stock1.getSymbol()));
+
 
 
 

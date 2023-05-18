@@ -120,10 +120,7 @@ public class Statements {
                 + "JOIN dim_stock d ON fin.stock_id = d.id \n"
                 + "WHERE user_id = ?";
 
-        // approxValue = försäljningspris per aktie (eller det senaste hämtade värdet) * antal holdings
-        // getValue ska bara uppdateras vid köp INTE sälj -> denna ger nya anskaffningspris/aktie
-        // getValue = (antal * pris/aktie) + (nytt antal * pris/aktie) / (antal + nytt antal)
-        // procentuella ökning = approx / (getValue*antal)
+
         static String create = "CREATE TABLE IF NOT EXISTS fact_transaction_in (\n"
                 + "id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
                 + "user_id INTEGER NOT NULL,\n"
@@ -131,13 +128,14 @@ public class Statements {
                 + "date DATE NOT NULL,\n"
                 + "quantity INTEGER NOT NULL,\n"
                 + "price DECIMAL NOT NULL,\n" // anskaffningsvärdet(getValue)
-                + "approxValue DECIMAL,\n" // pris försäljning
+                + "approxValue DECIMAL,\n"// pris försäljning
+                + "growth DECIMAL NOT NULL,"
                 + "FOREIGN KEY (user_id) REFERENCES dim_user(id),\n"
                 + "FOREIGN KEY (stock_id) REFERENCES dim_stock(id),\n"
                 + "UNIQUE(user_id, stock_id)"
                 + ");";
-        static String insert = "INSERT INTO fact_transaction_in(user_id, stock_id, date, \n"
-                + "quantity, price) VALUES(?,?,?,?,?)";
+        static String insert = "INSERT INTO fact_transaction_in(user_id, stock_id, \n"
+                + "quantity, price, approxValue, date, growth) VALUES(?,?,?,?,?, date('now'),0.0)";
         static String createSell = "CREATE TABLE IF NOT EXISTS fact_transaction_out (\n"
                 + "id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
                 + "user_id INTEGER NOT NULL,\n"
@@ -152,12 +150,37 @@ public class Statements {
         static String insertSell = "INSERT INTO fact_transaction_out(user_id, stock_id, \n"
                 + "buy_id, date, quantity, price) VALUES(?,?,?,?,?,?)";
         static String getBuyID = "SELECT id FROM fact_transaction_in WHERE user_id=? AND stock_id=?";
+        // approxValue = försäljningspris per aktie (eller det senaste hämtade värdet) * antal holdings
+        // getValue ska bara uppdateras vid köp INTE sälj -> denna ger nya anskaffningspris/aktie
+        // getValue = (antal * pris/aktie) + (nytt antal * pris/aktie) / (antal + nytt antal)
+        // procentuella ökning = approx / (getValue*antal)
+        // utveckling räknas ut (getValue - approxValue) / getValue -> growth
         static String updateBuy = "UPDATE fact_transaction_in\n"
-                + "SET quantity = quantity + ?, price =price + ?\n"
+                + "SET quantity = quantity + ?, price = (( price * quantity )+( ? * ? ))/( quantity + ? ), approxValue = ?*(?+quantity), \n"
+                + "growth = (? - ((price + ?)/2)) / ((price + ?)/2) \n"
                 + "WHERE user_id=? AND stock_id=?;";
+        static String updateBuySub = "UPDATE fact_transation_in\n"
+                + "SET quantity = quantity - ?, approxValue = ?*(?-quantity)\n"
+                + "WHERE user_id = ? AND stock_id = ?;";
         static String updateSell = "UPDATE fact_transaction_out\n"
                 + "SET quantity = quantity + ?, price = price + ?\n"
                 + "WHERE user_id = ? AND buy_id = ?;";
+        static String isAllowedSell = "SELECT quantity q FROM fact_transaction_in WHERE user_id = ? AND stock_id = ?";
+
+        // visar utvecklingen i pengar
+        static String selectGrowthMoney = "SELECT CASE\n" +
+                "       WHEN t < 0 THEN t * -1\n" +
+                "       ELSE t\n" +
+                "       END AS total\n" +
+                "FROM (\n" +
+                "  SELECT SUM(price * quantity) * AVG(growth) AS t\n" +
+                "  FROM fact_transaction_in\n" +
+                "  WHERE user_id = ?\n" +
+                ") \n";
+        // visar utveckling i procent
+        static String selectGrowthProcent = "SELECT AVG(growth) g FROM fact_transaction_in\n" +
+                "WHERE user_id = ?";
+
 
 
     }

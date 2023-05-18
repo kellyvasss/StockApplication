@@ -111,6 +111,8 @@ public class SQLite {
             System.out.println("fel med att hämta holdings " + e.getMessage());
         } return results;
     }
+    static String insert = "INSERT INTO fact_transaction_in(user_id, stock_id, \n"
+            + "quantity, price, approxValue, date = date('now'), growth = 0.0) VALUES(?,?,?,?,?)";
    public Boolean insertTransaction(User user, Integer quantity, Double price, String symbol) {
         Boolean succes = true;
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH:mm");
@@ -120,9 +122,10 @@ public class SQLite {
             PreparedStatement prepared = conn.prepareStatement(Statements.FactTransaction.insert);
             prepared.setInt(1,security(user));
             prepared.setInt(2, stock(symbol));
-            prepared.setString(3, date);
-            prepared.setInt(4, quantity);
+            prepared.setInt(3, quantity);
+            prepared.setDouble(4, price);
             prepared.setDouble(5, price * quantity);
+            //prepared.setString(6, date);
             prepared.executeUpdate();
         } catch (SQLException e) {
             System.out.println("fel med att insert into fact_transaction_in " + e.getMessage());
@@ -149,14 +152,55 @@ public class SQLite {
             succes = false;
         } return succes;
     }
+    static String updateBuySub = "UPDATE fact_transation_in\n"
+            + "SET quantity = quantity - ?, approxValue = ?*(quantity - ?)\n"
+            + "WHERE user_id = ? AND stock_id = ?;";
+   public Boolean updateBuySub(Integer quantity, Double price, User user, String symbol) {
+       Boolean succes = true;
+       try {
+           PreparedStatement p = conn.prepareStatement(Statements.FactTransaction.updateBuySub);
+           p.setInt(1, quantity);
+           p.setDouble(2, price);
+           p.setInt(3, quantity);
+           p.setInt(4, security(user));
+           p.setInt(stock(symbol));
+           p.executeUpdate();
+       } catch (SQLException e) {
+           System.out.println("fem med att uppdatera vid sälj " + e.getMessage());
+           succes = false;
+       } return succes;
+   }
+   // funkar returnerar true om antalet att vilja sälja är mindre eller lika med antal som finns
+   public Boolean isAllowedSell(User user, Integer quantity, String symbol) {
+       Boolean succes = true;
+       try {
+           PreparedStatement p = conn.prepareStatement(Statements.FactTransaction.isAllowedSell);
+           p.setInt(1, security(user));
+           p.setInt(2, stock(symbol));
+           ResultSet rs = p.executeQuery();
+           if (rs.next()) {
+               return rs.getInt("q") >= quantity;
+           }
+       } catch (SQLException e) {
+           succes = false;
+       } return succes;
+   }
+
     public Boolean updateBuy(Integer quantity, Double price, User user, String symbol) {
         Boolean succes = true;
         try {
             PreparedStatement prepared = conn.prepareStatement(Statements.FactTransaction.updateBuy);
-            prepared.setInt(1, quantity);
-            prepared.setDouble(2, price*quantity);
-            prepared.setInt(3, security(user));
-            prepared.setInt(4, stock(symbol));
+            prepared.setInt(1, quantity); // <- antal = antal + antal
+            prepared.setInt(2, quantity); // <- nytt antal köpta *
+            prepared.setDouble(3, price); // <- nytt pris/ aktie
+            prepared.setInt(4, quantity); // <- delat med totala antalet, (antal + antal)
+            prepared.setDouble(5, price); // <- nytt pris
+            prepared.setInt(6, quantity); // <- nytt pris * (antal + antal)
+            prepared.setDouble(7, price); // <- nya priset att subtrahera från (price)
+            prepared.setDouble(8, price); // <- nya priset att dela med två
+            prepared.setDouble(9, price); // <- nya priset att dela med nya-gamla
+            prepared.setInt(10, security(user));
+            prepared.setInt(11, stock(symbol));
             prepared.executeUpdate();
         } catch (SQLException e) {
             System.out.println("fel med att update fact_transaction_in " + e.getMessage());
