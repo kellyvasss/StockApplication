@@ -79,6 +79,7 @@ public class SQLite {
         tryStatement(Statements.DimUser.create);
     }
 
+    // returnerar user_id för aktuell user
     private Integer security(User user) {
         Integer sec = null;
         try {
@@ -93,6 +94,7 @@ public class SQLite {
         return sec;
     }
 
+    // lägger till en användare
     public Boolean insertUser(User user) {
         Boolean succes = true;
         try {
@@ -108,6 +110,7 @@ public class SQLite {
         return succes;
     }
 
+    // returnerar alla holdings
     public ArrayList<String> getGetUserStatusHoldings(User user) {
         Integer userID = security(user);
         ArrayList<String> results = new ArrayList<>();
@@ -130,6 +133,7 @@ public class SQLite {
         return results;
     }
 
+    // lägger till ett köp i in
     public Boolean insertTransaction(User user, Integer quantity, Double price, String symbol) {
         Boolean succes = true;
         try {
@@ -146,10 +150,7 @@ public class SQLite {
         }
         return succes;
     }
-
-    static String insertSell = "INSERT INTO fact_transaction_out(user_id, stock_id, \n"
-            + "buy_id, date, quantity, price) VALUES(?,?,?,?,?,?)";
-
+    // lägger till ett sälj i out
     public Boolean insertTransactionOut(User user, Integer quantity, Double price, String symbol) {
         Boolean succes = true;
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH:mm");
@@ -172,6 +173,7 @@ public class SQLite {
         return succes;
     }
 
+    // uppdaterar rad i köp när sälj
     public Boolean updateBuySub(Integer quantity, Double price, User user, String symbol) {
         Boolean succes = true;
         try {
@@ -191,6 +193,7 @@ public class SQLite {
 
     static String sellAllStocks = "DELETE FROM fact_transaction_in WHERE user_id = ? AND stock_id = ?;";
 
+    // raderar rad från in
     private void sellAll(User user, String symbol) {
         try {
             PreparedStatement p = conn.prepareStatement(sellAllStocks);
@@ -202,9 +205,6 @@ public class SQLite {
         }
     }
     // funkar returnerar true om antalet att vilja sälja är mindre eller lika med antal som finns
-    /*static String updateBuySub = "UPDATE fact_transation_in\n"
-            + "SET quantity = quantity - ?, approxValue = ?*(quantity - ?)\n"
-            + "WHERE user_id = ? AND stock_id = ?;";*/
 
     public Boolean isAllowedSell(User user, Integer quantity, String symbol, Double price) {
         Boolean succes = true;
@@ -213,14 +213,13 @@ public class SQLite {
             p.setInt(1, security(user));
             p.setInt(2, stock(symbol));
             ResultSet rs = p.executeQuery();
-            if (rs.next()) {
+            if (rs.next()) { // om det finns quantity i tabellen
                 Integer q = rs.getInt("q");
-                if (q == quantity) { // om antalet önskat sälj är lika med antalet som finns
+                if (q == quantity || q == 0) { // om antalet önskat sälj är lika med antalet som finns eller om antalet är 0
+                    sell(user, quantity, symbol, price); // låt sell ta hand om det ska uppdateras/läggas till
                     sellAll(user, symbol); // sälj och radera raden
-                    sell(user, quantity, symbol, price);
                 }
                 else if (q > quantity) { // om antalet som finns är mer än önskat sälj
-                    System.out.println("ELSE IF I ALLOW SELL");
                     updateBuySub(quantity, price, user, symbol); // uppdatera
                     sell(user, quantity, symbol, price);
                 }
@@ -239,18 +238,18 @@ public class SQLite {
             PreparedStatement pp = conn.prepareStatement("SELECT id FROM fact_transaction_out WHERE buy_id =?");
             pp.setInt(1, getBuyID(user, symbol));
             ResultSet r = pp.executeQuery();
-            if(r.next()) {
-                System.out.println("i rs.next IF");
-                updateSell(quantity, price, user, symbol);
-            } else {
-                System.out.println("i rs next ELSE");
-                insertTransactionOut(user, quantity, price, symbol);
+            if(r.next()) { // om det finns ett id som matchar
+                updateSell(quantity, price, user, symbol); // uppdatera out
+                updateBuySub(quantity,price,user,symbol); // uppdatera in
+            } else { // om det ej finns ett id som matchar
+                insertTransactionOut(user, quantity, price, symbol); // uppdatera out
+                updateBuySub(quantity,price,user,symbol); // uppdatera in
             }
         } catch (SQLException e) {
-            System.out.println("catch");
         }
     }
 
+    // uppdatera in tbl sätt nytt antal, pris
     public Boolean updateBuy(Integer quantity, Double price, User user, String symbol) {
         Boolean succes = true;
         try {
@@ -268,12 +267,12 @@ public class SQLite {
             prepared.setInt(11, stock(symbol));
             prepared.executeUpdate();
         } catch (SQLException e) {
-            System.out.println("fel med att update fact_transaction_in " + e.getMessage());
             succes = false;
         }
         return succes;
     }
 
+    // uppdatera sell
     public Boolean updateSell(Integer quantity, Double price, User user, String symbol) {
         Boolean succes = true;
         try {
@@ -291,6 +290,7 @@ public class SQLite {
         return succes;
     }
 
+    // få ett id på vilket köp det är
     public Integer getBuyID(User user, String symbol) {
         try {
             PreparedStatement prepared = conn.prepareStatement(Statements.FactTransaction.getBuyID);
@@ -301,26 +301,8 @@ public class SQLite {
                 return rs.getInt("id");
             }
         } catch (SQLException e) {
-            System.out.println("fel med att hämta buy_id från fact_transaction_in");
         }
         return null;
-    }
-
-    public Boolean insertPortfolio(Portfolio portfolio, User user) {
-        Boolean succes = true;
-        LocalDate today = LocalDate.now();
-        Date date = Date.valueOf(today);
-        try {
-            PreparedStatement prepared = conn.prepareStatement(Statements.DimPortfolio.insert);
-            prepared.setString(1, portfolio.getName());
-            prepared.setString(2, String.valueOf(date));
-            prepared.setInt(3, security(user));
-            prepared.executeUpdate();
-        } catch (SQLException e) {
-            System.out.println("fel med antagligen user implementationen... " + e.getMessage());
-            succes = false;
-        }
-        return succes;
     }
 
     public void insertMarket(Market market) {

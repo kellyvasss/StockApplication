@@ -90,10 +90,10 @@ public class test {
         User user2 = new User("hej", "då");
         sqLite.insertUser(user2);
         //sqLite.updateBuy(100, 1.0, user2, stock1.getSymbol());
-        sqLite.insertTransaction(user2, 10, stock1.getPrice(), stock1.getSymbol());
+        sqLite.insertTransaction(user2, 20, stock1.getPrice(), stock1.getSymbol());
         System.out.println("HEJ");
         System.out.println(stock1.getSymbol());
-        System.out.println(sqLite.isAllowedSell(user2, 1, stock1.getSymbol(), 10.0));
+        System.out.println(sqLite.isAllowedSell(user2, 10, stock1.getSymbol(), 10.0));
 
         //sqLite.updateBuySub(100, 100.0, user2, stock1.getSymbol());
 
