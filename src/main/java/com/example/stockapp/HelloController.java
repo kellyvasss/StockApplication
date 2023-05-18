@@ -5,13 +5,12 @@ import SQL.SQLite;
 import api.AlphaVantage;
 import api.KeyReader;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextInputDialog;
+import javafx.scene.control.*;
 import stock.Stock;
 import user.NumberValidator;
 import user.hash;
+
+import java.util.Optional;
 
 public class HelloController {
     @FXML
@@ -22,11 +21,20 @@ public class HelloController {
     private KeyReader keyReader;
     private AlphaVantage alphaVantage;
     private SQLite sqLite;
+    private ButtonType btnLogIn;
 
     public HelloController() {
+        keyReader = new KeyReader("Alpha");
+        alphaVantage = new AlphaVantage(keyReader.getAPIKey());
         inputDialog = new TextInputDialog();
-        Button login = new Button("Logga in");
-        login.setOnAction(event -> onHelloButtonClick());
+        inputDialog.setTitle("Logga in");
+        inputDialog.setHeaderText(null);
+        inputDialog.setContentText("Personnummer:");
+        btnLogIn = new ButtonType("Logga in");
+        Optional<String> optional = inputDialog.showAndWait();
+        String user = optional.get();
+
+
     }
 
 
@@ -34,7 +42,32 @@ public class HelloController {
     protected void onHelloButtonClick() {
 
         welcomeText.setText("Welcome to JavaFX Application!");
-        result.setText(hash.hasha("oooooooooooooooooooooooooooooooooooooooooo"));
+        //result.setText(alphaVantage.searchEndpoint(result.getText()));
+        search();
+    }
+    private void logIn() {
 
+    }
+    private void buy() {
+
+    }
+    private void sell() {
+
+    }
+    private void seeStatus() {
+
+    }
+    // byt ut så att man ej söker i fönstret där resultat visas
+    private void search() {
+        try {
+            result.setText(String.valueOf(alphaVantage.companyOverview(result.getText())));
+        } catch (NullPointerException e) {
+            try {
+                result.setText(alphaVantage.searchEndpoint(result.getText()));
+            }
+            catch (NumberFormatException ee) {
+                result.setText("Ingen matchande sökning på " + result.getText());
+            }
+        }
     }
 }

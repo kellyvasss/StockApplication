@@ -67,6 +67,7 @@ public class test {
 
         ArrayList<Stock> stocks = alphaVantage.timeSeriesDailyAdjusted("ARVN");
         Stock AAPL = alphaVantage.companyOverview("AAPL");
+        System.out.println(alphaVantage.companyOverview("lskldkl"));
 
         //System.out.println(alphaVantage.searchEndpoint("bra"));
         //System.out.println(stocks.get(0).getSymbol());
