@@ -31,7 +31,7 @@ public class AlphaVantage {
     // KLAR
     public Stock companyOverview(String symbol) {
         String function = "OVERVIEW";
-        String url = base_url + function + "&symbol=" + symbol + "&apikey=" + key;
+        String url = base_url + function + "&symbol=" + symbol + "&apikey=$" ;//+ key;
         Request request = new Request.Builder()
                 .url(url)
                 .get()
@@ -102,7 +102,7 @@ public class AlphaVantage {
     // sparar alla pris och datum för sökningen. KLAR
     public ArrayList<Stock> timeSeriesDailyAdjusted(String symbol) {
         String function = "TIME_SERIES_DAILY_ADJUSTED";
-        String url = base_url + function + "&symbol=" + symbol + "&apikey=" + key;
+        String url = base_url + function + "&symbol=" + symbol + "&apikey=$";// + key;
 
         Request request = new Request.Builder()
                 .url(url)

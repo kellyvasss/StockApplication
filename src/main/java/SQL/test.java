@@ -65,8 +65,8 @@ public class test {
 
         //sqLite.insertDimStock(stock1);
 
-        ArrayList<Stock> stocks = alphaVantage.timeSeriesDailyAdjusted("BRA.FRK");
-        Stock AAPL = alphaVantage.companyOverview("BRA.FRK");
+        ArrayList<Stock> stocks = alphaVantage.timeSeriesDailyAdjusted("ARVN");
+        Stock AAPL = alphaVantage.companyOverview("ARVN");
 
         //System.out.println(alphaVantage.searchEndpoint("bra"));
         //System.out.println(stocks.get(0).getSymbol());
