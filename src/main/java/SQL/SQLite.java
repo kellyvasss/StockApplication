@@ -1,5 +1,6 @@
 package SQL;
 
+import org.apache.shiro.session.mgt.DelegatingSession;
 import stock.Market;
 import stock.Portfolio;
 import stock.Stock;
@@ -13,6 +14,7 @@ import java.util.ArrayList;
 public class SQLite {
     Connection conn = null;
     String dbName = "";
+
     public SQLite(String dbName) {
         this.dbName = dbName;
         try {
@@ -21,6 +23,7 @@ public class SQLite {
             System.out.println(e.getMessage());
         }
     }
+
     private void tryStatement(String sql) {
         try {
             Statement statement = conn.createStatement();
@@ -31,39 +34,51 @@ public class SQLite {
 
         }
     }
+
     public void createTableDimStock() {
         tryStatement(Statements.DimStock.create);
     }
+
     public void createTableFactTransactionIn() {
         tryStatement(Statements.FactTransaction.create);
     }
+
     public void createTableFactTransactionOut() {
         tryStatement(Statements.FactTransaction.createSell);
     }
+
     public void createTableDimCurrency() {
         tryStatement(Statements.DimCurrency.create);
     }
+
     public void createTableFactStockPrice() {
         tryStatement(Statements.FactStock.create);
     }
+
     public void createTablePortfolio() {
         tryStatement(Statements.DimPortfolio.create);
     }
+
     public void createTableDimSector() {
         tryStatement(Statements.DimSector.create);
     }
+
     public void createTableCountry() {
         tryStatement(Statements.DimCountry.create);
     }
+
     public void createTableDimIndustry() {
         tryStatement(Statements.DimIndustry.create);
     }
+
     public void createTableDimMarket() {
         tryStatement(Statements.DimMarket.create);
     }
+
     public void createTableUser() {
         tryStatement(Statements.DimUser.create);
     }
+
     private Integer security(User user) {
         Integer sec = null;
         try {
@@ -83,20 +98,22 @@ public class SQLite {
         try {
             PreparedStatement prepared = conn.prepareStatement(Statements.DimUser.insert);
             prepared.setString(1, user.getPerson_id());
-            prepared.setString(2,user.getPassword());
+            prepared.setString(2, user.getPassword());
             prepared.setString(3, user.getPasSalt());
             prepared.executeUpdate();
         } catch (SQLException e) {
             System.out.println("fel med att lägga till user i dim_user. " + e.getMessage());
             succes = false;
-        } return succes;
+        }
+        return succes;
     }
+
     public ArrayList<String> getGetUserStatusHoldings(User user) {
         Integer userID = security(user);
         ArrayList<String> results = new ArrayList<>();
         try {
             PreparedStatement prepared = conn.prepareStatement(Statements.FactTransaction.getUserStatusHoldings);
-            prepared.setInt(1,userID);
+            prepared.setInt(1, userID);
             ResultSet rs = prepared.executeQuery();
             while (rs.next()) {
                 String result = "Name of stock: " + rs.getString("n")
@@ -109,82 +126,130 @@ public class SQLite {
             }
         } catch (SQLException e) {
             System.out.println("fel med att hämta holdings " + e.getMessage());
-        } return results;
+        }
+        return results;
     }
-    static String insert = "INSERT INTO fact_transaction_in(user_id, stock_id, \n"
-            + "quantity, price, approxValue, date = date('now'), growth = 0.0) VALUES(?,?,?,?,?)";
-   public Boolean insertTransaction(User user, Integer quantity, Double price, String symbol) {
+
+    public Boolean insertTransaction(User user, Integer quantity, Double price, String symbol) {
         Boolean succes = true;
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH:mm");
-        LocalDateTime now = LocalDateTime.now();
-        String date = dtf.format(now);
         try {
             PreparedStatement prepared = conn.prepareStatement(Statements.FactTransaction.insert);
-            prepared.setInt(1,security(user));
+            prepared.setInt(1, security(user));
             prepared.setInt(2, stock(symbol));
             prepared.setInt(3, quantity);
             prepared.setDouble(4, price);
             prepared.setDouble(5, price * quantity);
-            //prepared.setString(6, date);
             prepared.executeUpdate();
         } catch (SQLException e) {
             System.out.println("fel med att insert into fact_transaction_in " + e.getMessage());
             succes = false;
-        } return succes;
+        }
+        return succes;
     }
+
+    static String insertSell = "INSERT INTO fact_transaction_out(user_id, stock_id, \n"
+            + "buy_id, date, quantity, price) VALUES(?,?,?,?,?,?)";
+
     public Boolean insertTransactionOut(User user, Integer quantity, Double price, String symbol) {
         Boolean succes = true;
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH:mm");
         LocalDateTime now = LocalDateTime.now();
         String date = dtf.format(now);
-        Integer buy_id = getBuyID(user,symbol);
+        Integer buy_id = getBuyID(user, symbol);
         try {
             PreparedStatement prepared = conn.prepareStatement(Statements.FactTransaction.insertSell);
-            prepared.setInt(1,security(user));
+            prepared.setInt(1, security(user));
             prepared.setInt(2, stock(symbol));
             prepared.setInt(3, buy_id);
             prepared.setString(4, date);
-            prepared.setInt(5,quantity);
-            prepared.setDouble(6,price);
+            prepared.setInt(5, quantity);
+            prepared.setDouble(6, price);
             prepared.executeUpdate();
         } catch (SQLException e) {
             System.out.println("fel med att insert into fact_transaction_out " + e.getMessage());
             succes = false;
-        } return succes;
+        }
+        return succes;
     }
-    static String updateBuySub = "UPDATE fact_transation_in\n"
+
+    public Boolean updateBuySub(Integer quantity, Double price, User user, String symbol) {
+        Boolean succes = true;
+        try {
+            PreparedStatement p = conn.prepareStatement(Statements.FactTransaction.updateBuySub);
+            p.setInt(1, quantity);
+            p.setDouble(2, price);
+            p.setInt(3, quantity);
+            p.setInt(4, security(user));
+            p.setInt(5, stock(symbol));
+            p.executeUpdate();
+        } catch (SQLException e) {
+            System.out.println("fem med att uppdatera vid sälj " + e.getMessage());
+            succes = false;
+        }
+        return succes;
+    }
+
+    static String sellAllStocks = "DELETE FROM fact_transaction_in WHERE user_id = ? AND stock_id = ?;";
+
+    private void sellAll(User user, String symbol) {
+        try {
+            PreparedStatement p = conn.prepareStatement(sellAllStocks);
+            p.setInt(1, security(user));
+            p.setInt(2, stock(symbol));
+            p.executeUpdate();
+        } catch (SQLException e) {
+            System.out.println("fel med att sälja");
+        }
+    }
+    // funkar returnerar true om antalet att vilja sälja är mindre eller lika med antal som finns
+    /*static String updateBuySub = "UPDATE fact_transation_in\n"
             + "SET quantity = quantity - ?, approxValue = ?*(quantity - ?)\n"
-            + "WHERE user_id = ? AND stock_id = ?;";
-   public Boolean updateBuySub(Integer quantity, Double price, User user, String symbol) {
-       Boolean succes = true;
-       try {
-           PreparedStatement p = conn.prepareStatement(Statements.FactTransaction.updateBuySub);
-           p.setInt(1, quantity);
-           p.setDouble(2, price);
-           p.setInt(3, quantity);
-           p.setInt(4, security(user));
-           p.setInt(stock(symbol));
-           p.executeUpdate();
-       } catch (SQLException e) {
-           System.out.println("fem med att uppdatera vid sälj " + e.getMessage());
-           succes = false;
-       } return succes;
-   }
-   // funkar returnerar true om antalet att vilja sälja är mindre eller lika med antal som finns
-   public Boolean isAllowedSell(User user, Integer quantity, String symbol) {
-       Boolean succes = true;
-       try {
-           PreparedStatement p = conn.prepareStatement(Statements.FactTransaction.isAllowedSell);
-           p.setInt(1, security(user));
-           p.setInt(2, stock(symbol));
-           ResultSet rs = p.executeQuery();
-           if (rs.next()) {
-               return rs.getInt("q") >= quantity;
-           }
-       } catch (SQLException e) {
-           succes = false;
-       } return succes;
-   }
+            + "WHERE user_id = ? AND stock_id = ?;";*/
+
+    public Boolean isAllowedSell(User user, Integer quantity, String symbol, Double price) {
+        Boolean succes = true;
+        try {
+            PreparedStatement p = conn.prepareStatement(Statements.FactTransaction.isAllowedSell);
+            p.setInt(1, security(user));
+            p.setInt(2, stock(symbol));
+            ResultSet rs = p.executeQuery();
+            if (rs.next()) {
+                Integer q = rs.getInt("q");
+                if (q == quantity) { // om antalet önskat sälj är lika med antalet som finns
+                    sellAll(user, symbol); // sälj och radera raden
+                    sell(user, quantity, symbol, price);
+                }
+                else if (q > quantity) { // om antalet som finns är mer än önskat sälj
+                    System.out.println("ELSE IF I ALLOW SELL");
+                    updateBuySub(quantity, price, user, symbol); // uppdatera
+                    sell(user, quantity, symbol, price);
+                }
+            }
+            return rs.getInt("q") >= quantity;
+
+        } catch (SQLException e) {
+            succes = false;
+        }
+        return succes;
+    }
+
+    // avgör om säljet skall läggas in eller uppdateras
+    private void sell(User user, Integer quantity, String symbol, Double price) {
+        try {
+            PreparedStatement pp = conn.prepareStatement("SELECT id FROM fact_transaction_out WHERE buy_id =?");
+            pp.setInt(1, getBuyID(user, symbol));
+            ResultSet r = pp.executeQuery();
+            if(r.next()) {
+                System.out.println("i rs.next IF");
+                updateSell(quantity, price, user, symbol);
+            } else {
+                System.out.println("i rs next ELSE");
+                insertTransactionOut(user, quantity, price, symbol);
+            }
+        } catch (SQLException e) {
+            System.out.println("catch");
+        }
+    }
 
     public Boolean updateBuy(Integer quantity, Double price, User user, String symbol) {
         Boolean succes = true;
@@ -205,21 +270,27 @@ public class SQLite {
         } catch (SQLException e) {
             System.out.println("fel med att update fact_transaction_in " + e.getMessage());
             succes = false;
-        } return succes;
+        }
+        return succes;
     }
+
     public Boolean updateSell(Integer quantity, Double price, User user, String symbol) {
         Boolean succes = true;
         try {
+            System.out.println("i uppdate sell");
             PreparedStatement prepared = conn.prepareStatement(Statements.FactTransaction.updateSell);
             prepared.setInt(1, quantity);
             prepared.setDouble(2, price);
             prepared.setInt(3, security(user));
-            prepared.setInt(4, getBuyID(user,symbol));
+            prepared.setInt(4, getBuyID(user, symbol));
+            prepared.executeUpdate();
         } catch (SQLException e) {
             System.out.println("fel med att update fact_transaction_out " + e.getMessage());
             succes = false;
-        } return succes;
+        }
+        return succes;
     }
+
     public Integer getBuyID(User user, String symbol) {
         try {
             PreparedStatement prepared = conn.prepareStatement(Statements.FactTransaction.getBuyID);
@@ -231,8 +302,10 @@ public class SQLite {
             }
         } catch (SQLException e) {
             System.out.println("fel med att hämta buy_id från fact_transaction_in");
-        } return null;
+        }
+        return null;
     }
+
     public Boolean insertPortfolio(Portfolio portfolio, User user) {
         Boolean succes = true;
         LocalDate today = LocalDate.now();
@@ -246,8 +319,10 @@ public class SQLite {
         } catch (SQLException e) {
             System.out.println("fel med antagligen user implementationen... " + e.getMessage());
             succes = false;
-        } return succes;
+        }
+        return succes;
     }
+
     public void insertMarket(Market market) {
         String insertMarket = "INSERT INTO dim_market (name, open, close, note) VALUES(?,?,?,?)";
         try {
@@ -255,12 +330,13 @@ public class SQLite {
             p.setString(1, market.getName());
             p.setString(2, market.getOpen());
             p.setString(3, market.getClose());
-            p.setString(4,market.getNote());
+            p.setString(4, market.getNote());
             p.executeUpdate();
         } catch (SQLException e) {
             System.out.println("fel med insert Market " + e.getMessage());
         }
     }
+
     // funkar
     public Integer insertMarket(Stock stock) {
         try {
@@ -284,6 +360,7 @@ public class SQLite {
         }
         return null;
     }
+
     // funkar
     public Integer insertCountry(Stock stock) {
         try {
@@ -307,6 +384,7 @@ public class SQLite {
         }
         return null;
     }
+
     // funkar
     public Integer insertSector(Stock stock) {
         try {
@@ -354,11 +432,12 @@ public class SQLite {
         }
         return null;
     }
+
     // funkar
     public Integer stock(Stock stock) {
         try {
             PreparedStatement p = conn.prepareStatement(Statements.DimStock.selectID);
-            p.setString(1,stock.getSymbol());
+            p.setString(1, stock.getSymbol());
             ResultSet rs = p.executeQuery();
             if (rs.next()) {
                 return rs.getInt("id");
@@ -372,23 +451,26 @@ public class SQLite {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-        } return null;
+        }
+        return null;
     }
+
     public Integer stock(String symbol) {
         try {
             PreparedStatement p = conn.prepareStatement(Statements.DimStock.selectID);
-            p.setString(1,symbol);
+            p.setString(1, symbol);
             ResultSet rs = p.executeQuery();
             if (rs.next()) {
                 return rs.getInt("id");
             } else {
 
             }
-        }
-        catch (SQLException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
-        } return null;
+        }
+        return null;
     }
+
     // funkar
     private void insertCurrency(Stock stock) {
         try {
@@ -400,6 +482,7 @@ public class SQLite {
             System.out.println(e.getMessage());
         }
     }
+
     // funkar
     public Integer currency(Stock stock) {
         try {
@@ -419,7 +502,8 @@ public class SQLite {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-        } return null;
+        }
+        return null;
     }
 
     // funkar
@@ -444,6 +528,7 @@ public class SQLite {
             System.out.println(e.getMessage());
         }
     }
+
     // funkar
     public void insertFactStock(Stock s) {
         Integer stock = stock(s);

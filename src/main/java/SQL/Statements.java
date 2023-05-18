@@ -159,27 +159,23 @@ public class Statements {
                 + "SET quantity = quantity + ?, price = (( price * quantity )+( ? * ? ))/( quantity + ? ), approxValue = ?*(?+quantity), \n"
                 + "growth = (? - ((price + ?)/2)) / ((price + ?)/2) \n"
                 + "WHERE user_id=? AND stock_id=?;";
-        static String updateBuySub = "UPDATE fact_transation_in\n"
-                + "SET quantity = quantity - ?, approxValue = ?*(?-quantity)\n"
+
+        static String updateBuySub = "UPDATE fact_transaction_in\n"
+                + "SET quantity = quantity - ?, approxValue = ?*(quantity-?)\n"
                 + "WHERE user_id = ? AND stock_id = ?;";
         static String updateSell = "UPDATE fact_transaction_out\n"
                 + "SET quantity = quantity + ?, price = price + ?\n"
                 + "WHERE user_id = ? AND buy_id = ?;";
         static String isAllowedSell = "SELECT quantity q FROM fact_transaction_in WHERE user_id = ? AND stock_id = ?";
 
-        // visar utvecklingen i pengar
-        static String selectGrowthMoney = "SELECT CASE\n" +
-                "       WHEN t < 0 THEN t * -1\n" +
-                "       ELSE t\n" +
-                "       END AS total\n" +
-                "FROM (\n" +
-                "  SELECT SUM(price * quantity) * AVG(growth) AS t\n" +
-                "  FROM fact_transaction_in\n" +
-                "  WHERE user_id = ?\n" +
-                ") \n";
-        // visar utveckling i procent
-        static String selectGrowthProcent = "SELECT AVG(growth) g FROM fact_transaction_in\n" +
-                "WHERE user_id = ?";
+        // visar utveckling i procent för allt
+        static String selectGrowthProcentAll = "SELECT (price - (CAST(approxValue AS REAL) / quantity)) / price AS r\n" +
+                "FROM fact_transaction_in\n" +
+                "WHERE user_id = ?;";
+        // visar utvecklingen i procent för en
+        static String selectGrowthProcentOne = "SELECT (price - (CAST(approxValue AS REAL) / quantity)) / price AS r\n" +
+                "FROM fact_transaction_in\n" +
+                "WHERE user_id = ? AND stock_id = ?;";
 
 
 
