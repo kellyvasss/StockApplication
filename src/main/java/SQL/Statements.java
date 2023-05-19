@@ -1,10 +1,10 @@
 package SQL;
 
-public class Statements {
-    static class FactStock {
-        static String insertFactStock = "INSERT INTO fact_StockPrice(stock_id, date, price, currency_id) "
+public final class Statements {
+    static final class FactStock {
+        static final String insertFactStock = "INSERT INTO fact_StockPrice(stock_id, date, price, currency_id) "
                 + "VALUES(?,?,?,?)";
-        static String create = "CREATE TABLE IF NOT EXISTS fact_StockPrice (\n"
+        static final String create = "CREATE TABLE IF NOT EXISTS fact_StockPrice (\n"
                 + "id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
                 + "stock_id INTEGER NOT NULL,\n"
                 + "date DATE NOT NULL,\n"
@@ -15,13 +15,13 @@ public class Statements {
                 + "UNIQUE(stock_id, date));";
     }
 
-    static class DimStock {
-        static String insertDimStock = "INSERT INTO dim_stock(symbol,name,description,"
+    static final class DimStock {
+        static final String insertDimStock = "INSERT INTO dim_stock(symbol,name,description,"
                 + "market_id,country_id,sector_id,industry_id) "
                 + "VALUES(?,?,?,?,?,?,?)";
-        static String selectID = "SELECT id FROM dim_stock WHERE symbol=?";
-        static String count = "SELECT COUNT(*) id FROM dim_stock;";
-        static String create = "CREATE TABLE IF NOT EXISTS dim_stock (\n"
+        static final String selectID = "SELECT id FROM dim_stock WHERE symbol=?";
+        static final String count = "SELECT COUNT(*) id FROM dim_stock;";
+        static final String create = "CREATE TABLE IF NOT EXISTS dim_stock (\n"
                 + "id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
                 + "symbol VARCHAR(10) UNIQUE,\n"
                 + "name VARCHAR(50),\n"
@@ -37,40 +37,40 @@ public class Statements {
     }
 
     static class DimIndustry {
-        static String count = "SELECT COUNT(*) id FROM dim_industry;";
-        static String insert = "INSERT INTO dim_industry(name) VALUES(?)";
-        static String selectID = "SELECT id FROM dim_industry WHERE name=?";
-        static String create = "CREATE TABLE IF NOT EXISTS dim_industry (\n"
+        static final String count = "SELECT COUNT(*) id FROM dim_industry;";
+        static final String insert = "INSERT INTO dim_industry(name) VALUES(?)";
+        static final String selectID = "SELECT id FROM dim_industry WHERE name=?";
+        static final String create = "CREATE TABLE IF NOT EXISTS dim_industry (\n"
                 + "id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
                 + "name VARCHAR(50) UNIQUE);";
 
     }
 
-    static class DimCurrency {
-        static String selectID = "SELECT id FROM dim_currency WHERE currency=?";
-        static String count = "SELECT COUNT(*) id FROM dim_currency;";
-        static String insert = "INSERT INTO dim_currency(currency) VALUES(?)";
-        static String create = "CREATE TABLE IF NOT EXISTS dim_currency (\n"
+    static final class DimCurrency {
+        static final String selectID = "SELECT id FROM dim_currency WHERE currency=?";
+        static final String count = "SELECT COUNT(*) id FROM dim_currency;";
+        static final String insert = "INSERT INTO dim_currency(currency) VALUES(?)";
+        static final String create = "CREATE TABLE IF NOT EXISTS dim_currency (\n"
                 + "id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
                 + "currency VARCHAR(3) UNIQUE);";
 
     }
 
-    static class DimCountry {
-        static String selectID = "SELECT id FROM dim_country WHERE name=?";
-        static String insert = "INSERT INTO dim_country(name) VALUES(?)";
-        static String count = "SELECT COUNT(*) id FROM dim_country;";
-        static String create = "CREATE TABLE IF NOT EXISTS dim_country (\n"
+    static final class DimCountry {
+        static final String selectID = "SELECT id FROM dim_country WHERE name=?";
+        static final String insert = "INSERT INTO dim_country(name) VALUES(?)";
+        static final String count = "SELECT COUNT(*) id FROM dim_country;";
+        static final String create = "CREATE TABLE IF NOT EXISTS dim_country (\n"
                 + "id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
                 + "name VARCHAR(30) UNIQUE);";
 
     }
 
-    static class DimMarket {
-        static String selectID = "SELECT id FROM dim_market WHERE name=?";
-        static String insert = "INSERT INTO dim_market(name) VALUES(?)";
-        static String count = "SELECT COUNT(*) id FROM dim_market;";
-        static String create = "CREATE TABLE IF NOT EXISTS dim_market (\n"
+    static final class DimMarket {
+        static final String selectID = "SELECT id FROM dim_market WHERE name=?";
+        static final String insert = "INSERT INTO dim_market(name) VALUES(?)";
+        static final String count = "SELECT COUNT(*) id FROM dim_market;";
+        static final String create = "CREATE TABLE IF NOT EXISTS dim_market (\n"
                 + "id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
                 + "name VARCHAR(10) UNIQUE,\n"
                 + "open VARCHAR(5),\n"
@@ -79,21 +79,21 @@ public class Statements {
 
     }
 
-    static class DimSector {
-        static String selectID = "SELECT id FROM dim_sector WHERE name=?";
-        static String insert = "INSERT INTO dim_sector(name) VALUES(?)";
-        static String count = "SELECT COUNT(*) id FROM dim_sector;";
-        static String create = "CREATE TABLE IF NOT EXISTS dim_sector (\n"
+    static final class DimSector {
+        static final String selectID = "SELECT id FROM dim_sector WHERE name=?";
+        static final String insert = "INSERT INTO dim_sector(name) VALUES(?)";
+        static final String count = "SELECT COUNT(*) id FROM dim_sector;";
+        static final String create = "CREATE TABLE IF NOT EXISTS dim_sector (\n"
                 + "id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
                 + "name VARCHAR(30) UNIQUE);";
 
     }
 
-    static class DimUser {
+    static final class DimUser {
         // alla users ska få 10000 att handla för
-        static String insert = "INSERT INTO dim_user(person_id, password, pas_salt, cash) VALUES(?,?,?,10000.0)";
-        static String selectID = "SELECT id FROM dim_user WHERE person_id=?";
-        static String create = "CREATE TABLE IF NOT EXISTS dim_user (\n"
+        static final String insert = "INSERT INTO dim_user(person_id, password, pas_salt, cash) VALUES(?,?,?,10000.0)";
+        static final String selectID = "SELECT id FROM dim_user WHERE person_id=?";
+        static final String create = "CREATE TABLE IF NOT EXISTS dim_user (\n"
                 + "id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
                 + "person_id VARCHAR(10) UNIQUE,\n"
                 + "password TEXT,\n"
@@ -102,16 +102,16 @@ public class Statements {
                 + ");";
     }
 
-    static class FactTransaction {
+    static final class FactTransaction {
         // ändra dim_stock till d, fact_in till fin, fact_out till out
-        static String getUserStatusHoldings = "SELECT d.name n, d.symbol s, fin.quantity q, "
+        static final String getUserStatusHoldings = "SELECT d.name n, d.symbol s, fin.quantity q, "
                 + "fin.price p, fin.approxValue / (fin.price * fin.quantity) AS g \n"
                 + "FROM fact_transaction_in fin \n"
                 + "JOIN dim_stock d ON fin.stock_id = d.id \n"
                 + "WHERE user_id = ?";
 
 
-        static String create = "CREATE TABLE IF NOT EXISTS fact_transaction_in (\n"
+        static final String create = "CREATE TABLE IF NOT EXISTS fact_transaction_in (\n"
                 + "id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
                 + "user_id INTEGER NOT NULL,\n"
                 + "stock_id INTEGER NOT NULL,\n"
@@ -124,10 +124,10 @@ public class Statements {
                 + "FOREIGN KEY (stock_id) REFERENCES dim_stock(id),\n"
                 + "UNIQUE(user_id, stock_id)"
                 + ");";
-        static String insert = "INSERT INTO fact_transaction_in(user_id, stock_id, \n"
+        static final String insert = "INSERT INTO fact_transaction_in(user_id, stock_id, \n"
                 + "quantity, price, approxValue, date, growth) VALUES(?,?,?,?,?, date('now'),0.0)";
         // inget value ska vara unikt här eftersom alla sälj är unika
-        static String createSell = "CREATE TABLE IF NOT EXISTS fact_transaction_out (\n"
+        static final String createSell = "CREATE TABLE IF NOT EXISTS fact_transaction_out (\n"
                 + "id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
                 + "user_id INTEGER NOT NULL,\n"
                 + "stock_id INTEGER NOT NULL,\n"
@@ -139,12 +139,12 @@ public class Statements {
                 + "FOREIGN KEY (stock_id) REFERENCES dim_stock(id),\n"
                 + "FOREIGN KEY (buy_id) REFERENCES fact_transaction_in(id));";
         // lägg till en rad i out(sälj)
-        static String insertSell = "INSERT INTO fact_transaction_out(user_id, stock_id, \n"
+        static final String insertSell = "INSERT INTO fact_transaction_out(user_id, stock_id, \n"
                 + "buy_id, quantity, price, date) VALUES(?,?,?,?,?,date('now'))";
         // vid sälj av alla aktier
-        static String sellAllStocks = "DELETE FROM fact_transaction_in WHERE user_id = ? AND stock_id = ?;";
+        static final String sellAllStocks = "DELETE FROM fact_transaction_in WHERE user_id = ? AND stock_id = ?;";
         // när man vill veta vilket köp säljet tillhör
-        static String getBuyID = "SELECT id FROM fact_transaction_in WHERE user_id=? AND stock_id=?";
+        static final String getBuyID = "SELECT id FROM fact_transaction_in WHERE user_id=? AND stock_id=?";
 
         // approxValue = försäljningspris per aktie (eller det senaste hämtade värdet) * antal holdings
         // getValue ska bara uppdateras vid köp INTE sälj -> denna ger nya anskaffningspris/aktie
@@ -152,24 +152,24 @@ public class Statements {
         // procentuella ökning = approx / (getValue*antal)
         // utveckling räknas ut (getValue - approxValue) / getValue -> growth
         // uppdaterar köp vid köp av fler aktier som redan finns i befintligt holdings.
-        static String updateBuy = "UPDATE fact_transaction_in\n"
+        static final String updateBuy = "UPDATE fact_transaction_in\n"
                 + "SET quantity = quantity + ?, price = (( price * quantity )+( ? * ? ))/( quantity + ? ), approxValue = ?*(?+quantity), \n"
                 + "growth = (? - ((price + ?)/2)) / ((price + ?)/2) \n"
                 + "WHERE user_id=? AND stock_id=?;";
 
         // uppdaterar köp vid sälj av delar den uppdaterar enbart quantity och
         // approxvalue eftersom vid sälj får man inget nytt getValue(price)
-        static String updateBuySub = "UPDATE fact_transaction_in\n"
+        static final String updateBuySub = "UPDATE fact_transaction_in\n"
                 + "SET quantity = quantity - ?, approxValue = ?*(quantity-?)\n"
                 + "WHERE user_id = ? AND stock_id = ?;";
-        static String isAllowedSell = "SELECT quantity q FROM fact_transaction_in WHERE user_id = ? AND stock_id = ?";
+        static final String isAllowedSell = "SELECT quantity q FROM fact_transaction_in WHERE user_id = ? AND stock_id = ?";
 
         // visar utveckling i procent för allt
-        static String selectGrowthProcentAll = "SELECT (price - (CAST(approxValue AS REAL) / quantity)) / price AS r\n" +
+        static final String selectGrowthProcentAll = "SELECT (price - (CAST(approxValue AS REAL) / quantity)) / price AS r\n" +
                 "FROM fact_transaction_in\n" +
                 "WHERE user_id = ?;";
         // visar utvecklingen i procent för en
-        static String selectGrowthProcentOne = "SELECT (price - (CAST(approxValue AS REAL) / quantity)) / price AS r\n" +
+        static final String selectGrowthProcentOne = "SELECT (price - (CAST(approxValue AS REAL) / quantity)) / price AS r\n" +
                 "FROM fact_transaction_in\n" +
                 "WHERE user_id = ? AND stock_id = ?;";
 

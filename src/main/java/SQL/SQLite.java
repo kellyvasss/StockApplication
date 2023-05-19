@@ -506,7 +506,7 @@ public class SQLite {
         } catch (SQLException e) {
         }
     }
-    public User getUser()
+
 }
 
 
