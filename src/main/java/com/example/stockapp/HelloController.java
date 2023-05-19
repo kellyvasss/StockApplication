@@ -9,7 +9,9 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import stock.Stock;
+import user.Hasher;
 import user.NumberValidator;
+import user.User;
 import user.hash;
 
 import java.util.Optional;
@@ -30,16 +32,47 @@ public class HelloController {
 
     @FXML
     private PasswordField passwordField;
+    private User user;
 
 
     public HelloController() {
         keyReader = new KeyReader("Alpha");
         alphaVantage = new AlphaVantage(keyReader.getAPIKey());
-
+        sqLite = new SQLite("m");
     }
     public void onLoginButtonClick() {
         String password = passwordField.getText();
         String userNumber = personNumbField.getText();
+        // Vi börjar med att kontrollera att användarens input är tio siffror (personnummer)
+        if(NumberValidator.isNumeric(userNumber) && NumberValidator.isLenTen(userNumber)) {
+            try {
+                user = sqLite.getUser(userNumber);
+                int attempts = 0; // Tre försök att skriva in rätt lösenord
+                while (attempts < 3) {
+                    if (Hasher.verify(password, user.getPassword(), user.getPasSalt())) {
+                        // Här har användaren skrivit in rätt lösenord och den finns i databasen.
+                        // Låt programmet fortsätta och dölj inloggnings fälten och visa
+                        // lables med användarens balance och growth och aktuellt innehav.
+                    }
+                    else {
+                        // Här har användaren skrivit in fel lösenord, men den finns i databasen.
+                        // Be om lösenord igen
+                        attempts ++;
+                    }
+                }
+                if (attempts == 3) {
+                    System.exit(0);
+                }
+            } catch (RuntimeException e) {
+                // Catchar att usern inte finns i databasen
+                // Måste validera att personnummert är korrekt
+                if(NumberValidator.controllID(NumberValidator.toIntArray(userNumber))) {
+                    // Nummret är ett giltligt svenskt personnummer
+                    // Lägg till i databasen
+
+                }
+            }
+        }
     }
 
     @FXML

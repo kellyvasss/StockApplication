@@ -3,6 +3,7 @@ public class User {
     private String person_id; // personnummer
     private String password;
     private String pasSalt;
+    private String cash;
     public User(String person_id) {
         this.person_id = person_id;
     }
@@ -25,4 +26,11 @@ public class User {
         this.pasSalt = pasSalt;
     }
 
+    public String getCash() {
+        return cash;
+    }
+
+    public void setCash(String cash) {
+        this.cash = cash;
+    }
 }

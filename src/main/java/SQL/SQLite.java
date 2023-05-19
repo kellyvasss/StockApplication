@@ -382,6 +382,22 @@ public class SQLite {
         }
         return sec;
     }
+    public User getUser(String user_id) {
+        try {
+            PreparedStatement prepared = conn.prepareStatement("SELECT password, pas_salt, cash FROM dim_user WHERE person_id = ?");
+            prepared.setString(1, user_id);
+            ResultSet rs = prepared.executeQuery();
+            if (rs.next()) {
+                User user = new User(user_id);
+                user.setPassword(rs.getString("password"));
+                user.setPasSalt(rs.getString("pas_salt"));
+                user.setCash(rs.getString("cash"));
+                return user;
+            }
+        } catch (SQLException e) {
+            System.out.println("ingen person hittades " + e.getMessage());
+        } throw new RuntimeException();
+    }
 
 
     // få ett id på vilket köp det är från in tbl

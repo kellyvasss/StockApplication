@@ -25,7 +25,7 @@ public class test {
 
         System.out.println(alphaVantage.companyOverview("BA").getName());
 
-        User u = new User("9906220183");
+        User u = new User("990622010");
         u.setPasSalt(Hasher.generateSalt().toString());
         u.setPassword(Hasher.hash("hej", ByteSource.Util.bytes(u.getPasSalt())));
 
@@ -36,11 +36,16 @@ public class test {
         System.out.println(u.getPassword());
         System.out.println(Hasher.hash("hej", ByteSource.Util.bytes(u.getPasSalt())));
         SQLite sqLite = new SQLite("m");
-        Integer a = 0;
-        Integer b = 10;
-        a = b;
-        System.out.println(a);
+       // User u1 = sqLite.getUser("he");
+        //System.out.println(u1.getCash() + u1.getPassword() + u1.getPasSalt());
+        try  {
+            User uu = sqLite.getUser("hej");
+            System.out.println("jej");
+            System.out.println(uu.getCash());
+        }
+         catch (RuntimeException e) {
+            System.out.println("fångade" + e.getMessage());
+        }
 
-
-    }
+}
 }
