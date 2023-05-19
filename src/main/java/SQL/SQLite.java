@@ -12,206 +12,94 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
 public class SQLite {
-    static Connection conn = null;
+    Connection conn = null;
     String dbName = "";
 
     public SQLite(String dbName) {
+
         this.dbName = dbName;
         try {
             conn = DriverManager.getConnection("jdbc:sqlite:" + dbName + ".db");
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
-        Create.create();
+        create();
     }
+
+    private void tryStatement(String sql) { // används vid alla createTable statements
+        try {
+            Statement statement = conn.createStatement();
+            statement.execute(sql);
+            statement.close();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage() + e.getErrorCode() + e.getSQLState());
+
+        }
+    }
+
     // sköter skapandet av tabeller
-    private static class Create {
-
-        private static void tryStatement(String sql) {
-            try {
-                Statement statement = conn.createStatement();
-                statement.execute(sql);
-                statement.close();
-            } catch (SQLException e) {
-                System.out.println(e.getMessage() + e.getErrorCode() + e.getSQLState());
-
-            }
-        }
-        static void create() {
-            createTableUser();
-            createTableCountry();
-            createTableDimCurrency();
-            createTableDimIndustry();
-            createTableDimMarket();
-            createTableDimSector();
-            createTableDimStock();
-            createTableFactStockPrice();
-            createTableFactTransactionIn();
-            createTableFactTransactionOut();
-        }
-        static void createTableUser() {tryStatement(Statements.DimUser.create);}
-        static void createTableDimStock() {
-            tryStatement(Statements.DimStock.create);
-        }
-
-        static void createTableFactTransactionIn() {
-            tryStatement(Statements.FactTransaction.create);
-        }
-
-        static void createTableFactTransactionOut() {
-            tryStatement(Statements.FactTransaction.createSell);
-        }
-
-        static void createTableDimCurrency() {
-            tryStatement(Statements.DimCurrency.create);
-        }
-
-        static void createTableFactStockPrice() {
-            tryStatement(Statements.FactStock.create);
-        }
-
-        static void createTableDimSector() {
-            tryStatement(Statements.DimSector.create);
-        }
-
-        static void createTableCountry() {
-            tryStatement(Statements.DimCountry.create);
-        }
-
-        static void createTableDimIndustry() {
-            tryStatement(Statements.DimIndustry.create);
-        }
-
-        static void createTableDimMarket() { tryStatement(Statements.DimMarket.create); }
+    void create() {
+        createTableUser();
+        createTableCountry();
+        createTableDimCurrency();
+        createTableDimIndustry();
+        createTableDimMarket();
+        createTableDimSector();
+        createTableDimStock();
+        createTableFactStockPrice();
+        createTableFactTransactionIn();
+        createTableFactTransactionOut();
     }
 
-    class Update {
-
-    }
-    // sköter alla insert
-    class Insert {
-        // lägger till en användare
-        public static Boolean insertUser(User user) {
-            Boolean succes = true;
-            try {
-                PreparedStatement prepared = conn.prepareStatement(Statements.DimUser.insert);
-                prepared.setString(1, user.getPerson_id());
-                prepared.setString(2, user.getPassword());
-                prepared.setString(3, user.getPasSalt());
-                prepared.executeUpdate();
-            } catch (SQLException e) {
-                System.out.println("fel med att lägga till user i dim_user. " + e.getMessage());
-                succes = false;
-            }
-            return succes;
-        }
-        // lägger till ett köp i in
-        public static Boolean insertTransaction(User user, Integer quantity, Double price, String symbol) {
-            Boolean succes = true;
-            try {
-                PreparedStatement prepared = conn.prepareStatement(Statements.FactTransaction.insert);
-                prepared.setInt(1, ID.security(user));
-                prepared.setInt(2, stock(symbol));
-                prepared.setInt(3, quantity);
-                prepared.setDouble(4, price);
-                prepared.setDouble(5, price * quantity);
-                prepared.executeUpdate();
-            } catch (SQLException e) {
-                System.out.println("fel med att insert into fact_transaction_in " + e.getMessage());
-                succes = false;
-            }
-            return succes;
-        }
-        // lägger till ett sälj i out
-        public static Boolean insertTransactionOut(User user, Integer quantity, Double price, String symbol) {
-            Boolean succes = true;
-            Integer buy_id = getBuyID(user, symbol);
-            try {
-                PreparedStatement prepared = conn.prepareStatement(Statements.FactTransaction.insertSell);
-                prepared.setInt(1, ID.security(user));
-                prepared.setInt(2, stock(symbol));
-                prepared.setInt(3, buy_id);
-                prepared.setInt(4, quantity);
-                prepared.setDouble(5, price);
-                prepared.executeUpdate();
-            } catch (SQLException e) {
-                System.out.println("fel med att insert into fact_transaction_out " + e.getMessage());
-                succes = false;
-            }
-            return succes;
-        }
-    }
-    class Read {
-
-        // returnerar alla holdings
-        public static ArrayList<String> getGetUserStatusHoldings(User user) {
-            Integer userID = ID.security(user);
-            ArrayList<String> results = new ArrayList<>();
-            try {
-                PreparedStatement prepared = conn.prepareStatement(Statements.FactTransaction.getUserStatusHoldings);
-                prepared.setInt(1, userID);
-                ResultSet rs = prepared.executeQuery();
-                while (rs.next()) {
-                    String result = "Name of stock: " + rs.getString("n")
-                            + "\nSymbol: " + rs.getString("s")
-                            + "\nQuantity: " + rs.getString("q")
-                            + "\nBuy Price: " + rs.getString("p")
-                            + "\nGrowth: " + rs.getString("g") + "%";
-
-                    results.add(result);
-                }
-            } catch (SQLException e) {
-                System.out.println("fel med att hämta holdings " + e.getMessage());
-            }
-            return results;
-        }
-    }
-    // sköter hämtningen av id
-    private static class ID {
-        // returnerar user_id för aktuell user
-        private static Integer security(User user) {
-            Integer sec = null;
-            try {
-                PreparedStatement prepared = conn.prepareStatement(Statements.DimUser.selectID);
-                prepared.setString(1, user.getPerson_id());
-                ResultSet rs = prepared.executeQuery();
-                sec = rs.getInt("id");
-            } catch (SQLException e) {
-                System.out.println("fel med security metoden. " + e.getMessage());
-                return sec;
-            }
-            return sec;
-        }
-        // få ett id på vilket köp det är från in tbl
-        public static Integer getBuyID(User user, String symbol) {
-            try {
-                PreparedStatement prepared = conn.prepareStatement(Statements.FactTransaction.getBuyID);
-                prepared.setInt(1, ID.security(user));
-                prepared.setInt(2, stock(symbol));
-                ResultSet rs = prepared.executeQuery();
-                if (rs.next()) {
-                    return rs.getInt("id");
-                }
-            } catch (SQLException e) {
-            }
-            return null;
-        }
-
+    void createTableUser() {
+        tryStatement(Statements.DimUser.create);
     }
 
+    void createTableDimStock() {
+        tryStatement(Statements.DimStock.create);
+    }
 
+    void createTableFactTransactionIn() {
+        tryStatement(Statements.FactTransaction.create);
+    }
 
+    void createTableFactTransactionOut() {
+        tryStatement(Statements.FactTransaction.createSell);
+    }
 
+    void createTableDimCurrency() {
+        tryStatement(Statements.DimCurrency.create);
+    }
+
+    void createTableFactStockPrice() {
+        tryStatement(Statements.FactStock.create);
+    }
+
+    void createTableDimSector() {
+        tryStatement(Statements.DimSector.create);
+    }
+
+    void createTableCountry() {
+        tryStatement(Statements.DimCountry.create);
+    }
+
+    void createTableDimIndustry() {
+        tryStatement(Statements.DimIndustry.create);
+    }
+
+    void createTableDimMarket() {
+        tryStatement(Statements.DimMarket.create);
+    }
 
     // uppdaterar rad i köp när sälj
-    public Boolean updateBuySub(Integer quantity, Double price, User user, String symbol) {
+    Boolean updateBuySub(Integer quantity, Double price, User user, String symbol) {
         Boolean succes = true;
         try {
             PreparedStatement p = conn.prepareStatement(Statements.FactTransaction.updateBuySub);
             p.setInt(1, quantity);
             p.setDouble(2, price);
             p.setInt(3, quantity);
-            p.setInt(4, ID.security(user));
+            p.setInt(4, security(user));
             p.setInt(5, stock(symbol));
             p.executeUpdate();
         } catch (SQLException e) {
@@ -221,59 +109,8 @@ public class SQLite {
         return succes;
     }
 
-    // raderar rad från in
-    private void sellAll(User user, String symbol) {
-        try {
-            PreparedStatement p = conn.prepareStatement(Statements.FactTransaction.sellAllStocks);
-            p.setInt(1, ID.security(user));
-            p.setInt(2, stock(symbol));
-            p.executeUpdate();
-        } catch (SQLException e) {
-        }
-    }
-    // funkar returnerar true om antalet att vilja sälja är mindre eller lika med antal som finns
-    public Boolean isAllowedSell(User user, Integer quantity, String symbol, Double price) {
-        Boolean succes = true;
-        try {
-            PreparedStatement p = conn.prepareStatement(Statements.FactTransaction.isAllowedSell);
-            p.setInt(1, ID.security(user));
-            p.setInt(2, stock(symbol));
-            ResultSet rs = p.executeQuery();
-            if (rs.next()) { // om det finns quantity i tabellen
-                Integer q = rs.getInt("q");
-                if (q == quantity || q == 0) { // om antalet önskat sälj är lika med antalet som finns eller om antalet är 0
-                    sell(user, quantity, symbol, price); // låt sell ta hand om det ska uppdateras/läggas till
-                    sellAll(user, symbol); // sälj och radera raden
-                }
-                else if (q > quantity) { // om antalet som finns är mer än önskat sälj
-                    updateBuySub(quantity, price, user, symbol); // uppdatera in tbl till nytt antal och pris
-                    sell(user, quantity, symbol, price); // lägg in ett sälj i out tbl
-                }
-            }
-            return rs.getInt("q") >= quantity; // om antalet som finns är mer eller lika med än önskat sälj = true
-
-        } catch (SQLException e) {
-            succes = false;
-        }
-        return succes;
-    }
-
-    // lägger in en ny rad i out tbl om det finns ett köp
-    private void sell(User user, Integer quantity, String symbol, Double price) {
-        try {
-            PreparedStatement pp = conn.prepareStatement("SELECT id FROM fact_transaction_out WHERE buy_id =?");
-            pp.setInt(1, ID.getBuyID(user, symbol));
-            ResultSet r = pp.executeQuery();
-            if(r.next()) { // om det finns ett id som matchar
-                Insert.insertTransactionOut(user, quantity, price, symbol); // uppdatera out
-                updateBuySub(quantity,price,user,symbol); // uppdatera in
-            }
-        } catch (SQLException e) {
-        }
-    }
-
     // uppdatera in tbl sätt nytt antal, pris -> läs i Statementklass för att förstå parametrarna
-    public Boolean updateBuy(Integer quantity, Double price, User user, String symbol) {
+    Boolean updateBuy(Integer quantity, Double price, User user, String symbol) {
         Boolean succes = true;
         try {
             PreparedStatement prepared = conn.prepareStatement(Statements.FactTransaction.updateBuy);
@@ -286,7 +123,7 @@ public class SQLite {
             prepared.setDouble(7, price); // <- nya priset att subtrahera från (price)
             prepared.setDouble(8, price); // <- nya priset att dela med två
             prepared.setDouble(9, price); // <- nya priset att dela med nya-gamla
-            prepared.setInt(10, ID.security(user));
+            prepared.setInt(10, security(user));
             prepared.setInt(11, stock(symbol));
             prepared.executeUpdate();
         } catch (SQLException e) {
@@ -294,8 +131,103 @@ public class SQLite {
         }
         return succes;
     }
- // lägger till market i dim_market
-    public void insertMarket(Market market) {
+
+    // lägger till en användare
+    public Boolean insertUser(User user) {
+        Boolean succes = true;
+        try {
+            PreparedStatement prepared = conn.prepareStatement(Statements.DimUser.insert);
+            prepared.setString(1, user.getPerson_id());
+            prepared.setString(2, user.getPassword());
+            prepared.setString(3, user.getPasSalt());
+            prepared.executeUpdate();
+        } catch (SQLException e) {
+            System.out.println("fel med att lägga till user i dim_user. " + e.getMessage());
+            succes = false;
+        }
+        return succes;
+    }
+
+    // lägger till ett köp i in
+    public Boolean insertTransaction(User user, Integer quantity, Double price, String symbol) {
+        Boolean succes = true;
+        try {
+            PreparedStatement prepared = conn.prepareStatement(Statements.FactTransaction.insert);
+            prepared.setInt(1, security(user));
+            prepared.setInt(2, stock(symbol));
+            prepared.setInt(3, quantity);
+            prepared.setDouble(4, price);
+            prepared.setDouble(5, price * quantity);
+            prepared.executeUpdate();
+        } catch (SQLException e) {
+            System.out.println("fel med att insert into fact_transaction_in " + e.getMessage());
+            succes = false;
+        }
+        return succes;
+    }
+
+    // lägger till ett sälj i out
+    public Boolean insertTransactionOut(User user, Integer quantity, Double price, String symbol) {
+        Boolean succes = true;
+        Integer buy_id = getBuyID(user, symbol);
+        try {
+            PreparedStatement prepared = conn.prepareStatement(Statements.FactTransaction.insertSell);
+            prepared.setInt(1, security(user));
+            prepared.setInt(2, stock(symbol));
+            prepared.setInt(3, buy_id);
+            prepared.setInt(4, quantity);
+            prepared.setDouble(5, price);
+            prepared.executeUpdate();
+        } catch (SQLException e) {
+            System.out.println("fel med att insert into fact_transaction_out " + e.getMessage());
+            succes = false;
+        }
+        return succes;
+    }
+
+    // funkar
+    void insertDimStock(Stock stock) {
+        Integer market = insertMarket(stock);
+        Integer country = insertCountry(stock);
+        Integer sector = insertSector(stock);
+        Integer industry = insertIndustry(stock);
+        String sql = Statements.DimStock.insertDimStock;
+        try {
+            PreparedStatement prepared = conn.prepareStatement(sql);
+            prepared.setString(1, stock.getSymbol());
+            prepared.setString(2, stock.getName());
+            prepared.setString(3, stock.getDescription());
+            prepared.setInt(4, market);
+            prepared.setInt(5, country);
+            prepared.setInt(6, sector);
+            prepared.setInt(7, industry);
+            prepared.executeUpdate();
+            prepared.close();
+        } catch (SQLException e) {
+        }
+    }
+
+    // funkar
+    void insertFactStock(Stock s) {
+        Integer stock = stock(s);
+        Integer currency = currency(s);
+        String sql = Statements.FactStock.insertFactStock;
+        try {
+            PreparedStatement p = conn.prepareStatement(sql);
+            p.setInt(1, stock);
+            p.setString(2, s.getDate());
+            p.setDouble(3, s.getPrice());
+            p.setInt(4, currency);
+            p.executeUpdate();
+            p.close();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            System.out.println("fel med insert Fact Stock");
+        }
+    }
+
+    // lägger till market i dim_market
+    void insertMarket(Market market) {
         String insertMarket = "INSERT INTO dim_market (name, open, close, note) VALUES(?,?,?,?)";
         try {
             PreparedStatement p = conn.prepareStatement(insertMarket);
@@ -310,7 +242,7 @@ public class SQLite {
     }
 
     // funkar
-    public Integer insertMarket(Stock stock) {
+    Integer insertMarket(Stock stock) {
         try {
             PreparedStatement selectStatement = conn.prepareStatement(Statements.DimMarket.selectID);
             selectStatement.setString(1, stock.getExchange());
@@ -334,7 +266,7 @@ public class SQLite {
     }
 
     // funkar
-    public Integer insertCountry(Stock stock) {
+    Integer insertCountry(Stock stock) {
         try {
             PreparedStatement selectStatement = conn.prepareStatement(Statements.DimCountry.selectID);
             selectStatement.setString(1, stock.getCountry());
@@ -358,7 +290,7 @@ public class SQLite {
     }
 
     // funkar
-    public Integer insertSector(Stock stock) {
+    Integer insertSector(Stock stock) {
         try {
             PreparedStatement selectStatement = conn.prepareStatement(Statements.DimSector.selectID);
             selectStatement.setString(1, stock.getSector());
@@ -382,7 +314,7 @@ public class SQLite {
     }
 
     // funkar
-    public Integer insertIndustry(Stock stock) {
+    Integer insertIndustry(Stock stock) {
         try {
             PreparedStatement selectStatement = conn.prepareStatement(Statements.DimIndustry.selectID);
             selectStatement.setString(1, stock.getIndustry());
@@ -405,7 +337,67 @@ public class SQLite {
         return null;
     }
 
-    // funkar
+    void insertCurrency(Stock stock) {
+        try {
+            PreparedStatement p = conn.prepareStatement(Statements.DimCurrency.insert);
+            p.setString(1, stock.getCurrency());
+            p.executeUpdate();
+        } catch (SQLException e) {
+        }
+    }
+
+    // returnerar alla holdings
+    public ArrayList<String> getGetUserStatusHoldings(User user) {
+        ArrayList<String> results = new ArrayList<>();
+        try {
+            PreparedStatement prepared = conn.prepareStatement(Statements.FactTransaction.getUserStatusHoldings);
+            prepared.setInt(1, security(user));
+            ResultSet rs = prepared.executeQuery();
+            while (rs.next()) {
+                String result = "Name of stock: " + rs.getString("n")
+                        + "\nSymbol: " + rs.getString("s")
+                        + "\nQuantity: " + rs.getString("q")
+                        + "\nBuy Price: " + rs.getString("p")
+                        + "\nGrowth: " + rs.getString("g") + "%";
+
+                results.add(result);
+            }
+        } catch (SQLException e) {
+            System.out.println("fel med att hämta holdings " + e.getMessage());
+        }
+        return results;
+    }
+
+    // returnerar user_id för aktuell user
+    private Integer security(User user) {
+        Integer sec = null;
+        try {
+            PreparedStatement prepared = conn.prepareStatement(Statements.DimUser.selectID);
+            prepared.setString(1, user.getPerson_id());
+            ResultSet rs = prepared.executeQuery();
+            sec = rs.getInt("id");
+        } catch (SQLException e) {
+            System.out.println("fel med security metoden. " + e.getMessage());
+            return sec;
+        }
+        return sec;
+    }
+
+    // få ett id på vilket köp det är från in tbl
+    public Integer getBuyID(User user, String symbol) {
+        try {
+            PreparedStatement prepared = conn.prepareStatement(Statements.FactTransaction.getBuyID);
+            prepared.setInt(1, security(user));
+            prepared.setInt(2, stock(symbol));
+            ResultSet rs = prepared.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("id");
+            }
+        } catch (SQLException e) {
+        }
+        return null;
+    }
+
     public Integer stock(Stock stock) {
         try {
             PreparedStatement p = conn.prepareStatement(Statements.DimStock.selectID);
@@ -427,6 +419,27 @@ public class SQLite {
         return null;
     }
 
+    // funkar
+    Integer currency(Stock stock) {
+        try {
+            PreparedStatement p = conn.prepareStatement(Statements.DimCurrency.selectID);
+            p.setString(1, stock.getCurrency());
+            ResultSet rs = p.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("id");
+            } else {
+                insertCurrency(stock);
+                PreparedStatement ps = conn.prepareStatement(Statements.DimCurrency.count);
+                ResultSet r = ps.executeQuery();
+                if (r.next()) {
+                    return r.getInt("id");
+                }
+            }
+        } catch (SQLException e) {
+        }
+        return null;
+    }
+
     public Integer stock(String symbol) {
         try {
             PreparedStatement p = conn.prepareStatement(Statements.DimStock.selectID);
@@ -443,77 +456,60 @@ public class SQLite {
         return null;
     }
 
-    // funkar
-    private void insertCurrency(Stock stock) {
+    // raderar rad från in
+    void sellAll(User user, String symbol) {
         try {
-            PreparedStatement p = conn.prepareStatement(Statements.DimCurrency.insert);
-            p.setString(1, stock.getCurrency());
+            PreparedStatement p = conn.prepareStatement(Statements.FactTransaction.sellAllStocks);
+            p.setInt(1, security(user));
+            p.setInt(2, stock(symbol));
             p.executeUpdate();
         } catch (SQLException e) {
         }
     }
 
-    // funkar
-    public Integer currency(Stock stock) {
+    // funkar returnerar true om antalet att vilja sälja är mindre eller lika med antal som finns
+    Boolean isAllowedSell(User user, Integer quantity, String symbol, Double price) {
+        Boolean succes = true;
         try {
-            PreparedStatement p = conn.prepareStatement(Statements.DimCurrency.selectID);
-            p.setString(1, stock.getCurrency());
+            PreparedStatement p = conn.prepareStatement(Statements.FactTransaction.isAllowedSell);
+            p.setInt(1, security(user));
+            p.setInt(2, stock(symbol));
             ResultSet rs = p.executeQuery();
-            if (rs.next()) {
-                return rs.getInt("id");
-            } else {
-                insertCurrency(stock);
-                String sqlCount = Statements.DimCurrency.count;
-                PreparedStatement ps = conn.prepareStatement(sqlCount);
-                ResultSet r = ps.executeQuery();
-                if (r.next()) {
-                    return r.getInt("id");
+            if (rs.next()) { // om det finns quantity i tabellen
+                Integer q = rs.getInt("q");
+                if (q == quantity || q == 0) { // om antalet önskat sälj är lika med antalet som finns eller om antalet är 0
+                    sell(user, quantity, symbol, price); // låt sell ta hand om det ska uppdateras/läggas till
+                    sellAll(user, symbol); // sälj och radera raden
+                } else if (q > quantity) { // om antalet som finns är mer än önskat sälj
+                    updateBuySub(quantity, price, user, symbol); // uppdatera in tbl till nytt antal och pris
+                    sell(user, quantity, symbol, price); // lägg in ett sälj i out tbl
                 }
+            }
+            return rs.getInt("q") >= quantity; // om antalet som finns är mer eller lika med än önskat sälj = true
+
+        } catch (SQLException e) {
+            succes = false;
+        }
+        return succes;
+    }
+
+    // lägger in en ny rad i out tbl om det finns ett köp
+    void sell(User user, Integer quantity, String symbol, Double price) {
+        try {
+            PreparedStatement pp = conn.prepareStatement("SELECT id FROM fact_transaction_out WHERE buy_id =?");
+            pp.setInt(1, getBuyID(user, symbol));
+            ResultSet r = pp.executeQuery();
+            if (r.next()) { // om det finns ett id som matchar
+                insertTransactionOut(user, quantity, price, symbol); // uppdatera out
+                updateBuySub(quantity, price, user, symbol); // uppdatera in
             }
         } catch (SQLException e) {
         }
-        return null;
     }
-
-    // funkar
-    public void insertDimStock(Stock stock) {
-        Integer market = insertMarket(stock);
-        Integer country = insertCountry(stock);
-        Integer sector = insertSector(stock);
-        Integer industry = insertIndustry(stock);
-        String sql = Statements.DimStock.insertDimStock;
-        try {
-            PreparedStatement prepared = conn.prepareStatement(sql);
-            prepared.setString(1, stock.getSymbol());
-            prepared.setString(2, stock.getName());
-            prepared.setString(3, stock.getDescription());
-            prepared.setInt(4, market);
-            prepared.setInt(5, country);
-            prepared.setInt(6, sector);
-            prepared.setInt(7, industry);
-            prepared.executeUpdate();
-            prepared.close();
-        } catch (SQLException e) {
-        }
-    }
-
-    // funkar
-    public void insertFactStock(Stock s) {
-        Integer stock = stock(s);
-        Integer currency = currency(s);
-        String sql = Statements.FactStock.insertFactStock;
-        try {
-            PreparedStatement p = conn.prepareStatement(sql);
-            p.setInt(1, stock);
-            p.setString(2, s.getDate());
-            p.setDouble(3, s.getPrice());
-            p.setInt(4, currency);
-            p.executeUpdate();
-            p.close();
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-            System.out.println("fel med insert Fact Stock");
-        }
-    }
-
+    public User getUser()
 }
+
+
+
+
+
