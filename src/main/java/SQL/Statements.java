@@ -88,32 +88,22 @@ public class Statements {
                 + "name VARCHAR(30) UNIQUE);";
 
     }
- // ta bort
-    static class DimPortfolio {
-        static String insert = "INSERT INTO dim_portfolio(name, created_at, user_id) VALUES(?, ?, ?)";
-        static String create = "CREATE TABLE IF NOT EXISTS dim_portfolio (\n"
-                + "id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
-                + "name VARCHAR(30),\n"
-                + "created_at DATE,\n"
-                + "user_id INTEGER NOT NULL,\n"
-                + "FOREIGN KEY (user_id) REFERENCES dim_user(id)\n"
-                + ");";
-    }
 
     static class DimUser {
-        static String insert = "INSERT INTO dim_user(person_id, password, pas_salt) VALUES(?,?,?)";
+        // alla users ska få 10000 att handla för
+        static String insert = "INSERT INTO dim_user(person_id, password, pas_salt, cash) VALUES(?,?,?,10000.0)";
         static String selectID = "SELECT id FROM dim_user WHERE person_id=?";
         static String create = "CREATE TABLE IF NOT EXISTS dim_user (\n"
                 + "id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
                 + "person_id VARCHAR(10) UNIQUE,\n"
                 + "password TEXT,\n"
-                + "email VARCHAR(50),\n"
-                + "pas_salt VARCHAR(16)"
+                + "pas_salt VARCHAR(75),\n"
+                + "cash DECIMAL"
                 + ");";
     }
 
     static class FactTransaction {
-        // ändra dim_stock till d, fact_in till in, fact_out till out
+        // ändra dim_stock till d, fact_in till fin, fact_out till out
         static String getUserStatusHoldings = "SELECT d.name n, d.symbol s, fin.quantity q, "
                 + "fin.price p, fin.approxValue / (fin.price * fin.quantity) AS g \n"
                 + "FROM fact_transaction_in fin \n"
@@ -136,36 +126,42 @@ public class Statements {
                 + ");";
         static String insert = "INSERT INTO fact_transaction_in(user_id, stock_id, \n"
                 + "quantity, price, approxValue, date, growth) VALUES(?,?,?,?,?, date('now'),0.0)";
+        // inget value ska vara unikt här eftersom alla sälj är unika
         static String createSell = "CREATE TABLE IF NOT EXISTS fact_transaction_out (\n"
                 + "id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
                 + "user_id INTEGER NOT NULL,\n"
                 + "stock_id INTEGER NOT NULL,\n"
-                + "buy_id INTEGER NOT NULL UNIQUE,\n"
+                + "buy_id INTEGER NOT NULL,\n"
                 + "date DATE NOT NULL,\n"
                 + "quantity INTEGER NOT NULL,\n"
                 + "price DECIMAL NOT NULL,\n"
                 + "FOREIGN KEY (user_id) REFERENCES dim_user(id),\n"
                 + "FOREIGN KEY (stock_id) REFERENCES dim_stock(id),\n"
                 + "FOREIGN KEY (buy_id) REFERENCES fact_transaction_in(id));";
+        // lägg till en rad i out(sälj)
         static String insertSell = "INSERT INTO fact_transaction_out(user_id, stock_id, \n"
-                + "buy_id, date, quantity, price) VALUES(?,?,?,?,?,?)";
+                + "buy_id, quantity, price, date) VALUES(?,?,?,?,?,date('now'))";
+        // vid sälj av alla aktier
+        static String sellAllStocks = "DELETE FROM fact_transaction_in WHERE user_id = ? AND stock_id = ?;";
+        // när man vill veta vilket köp säljet tillhör
         static String getBuyID = "SELECT id FROM fact_transaction_in WHERE user_id=? AND stock_id=?";
+
         // approxValue = försäljningspris per aktie (eller det senaste hämtade värdet) * antal holdings
         // getValue ska bara uppdateras vid köp INTE sälj -> denna ger nya anskaffningspris/aktie
         // getValue = (antal * pris/aktie) + (nytt antal * pris/aktie) / (antal + nytt antal)
         // procentuella ökning = approx / (getValue*antal)
         // utveckling räknas ut (getValue - approxValue) / getValue -> growth
+        // uppdaterar köp vid köp av fler aktier som redan finns i befintligt holdings.
         static String updateBuy = "UPDATE fact_transaction_in\n"
                 + "SET quantity = quantity + ?, price = (( price * quantity )+( ? * ? ))/( quantity + ? ), approxValue = ?*(?+quantity), \n"
                 + "growth = (? - ((price + ?)/2)) / ((price + ?)/2) \n"
                 + "WHERE user_id=? AND stock_id=?;";
 
+        // uppdaterar köp vid sälj av delar den uppdaterar enbart quantity och
+        // approxvalue eftersom vid sälj får man inget nytt getValue(price)
         static String updateBuySub = "UPDATE fact_transaction_in\n"
                 + "SET quantity = quantity - ?, approxValue = ?*(quantity-?)\n"
                 + "WHERE user_id = ? AND stock_id = ?;";
-        static String updateSell = "UPDATE fact_transaction_out\n"
-                + "SET quantity = quantity + ?, price = price + ?\n"
-                + "WHERE user_id = ? AND buy_id = ?;";
         static String isAllowedSell = "SELECT quantity q FROM fact_transaction_in WHERE user_id = ? AND stock_id = ?";
 
         // visar utveckling i procent för allt

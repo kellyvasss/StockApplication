@@ -45,8 +45,8 @@ public class test {
 
 
 
-        SQLite sqLite = new SQLite("ii");
-        sqLite.createTableUser();
+        SQLite sqLite = new SQLite("m");
+       /* sqLite.createTableUser();
         sqLite.createTableCountry();
         sqLite.createTableDimCurrency();
         sqLite.createTableDimIndustry();
@@ -56,8 +56,12 @@ public class test {
         sqLite.createTableFactStockPrice();
         sqLite.createTableFactTransactionIn();
         sqLite.createTableFactTransactionOut();
-        String pas = hash.hasha(user.getPassword());
-        sqLite.insertUser(user1);
+        String pas = hash.hasha(user.getPassword());*/
+        User u = new User("9906220101", "hej");
+        SQLite.Insert.insertUser(u);
+        SQLite.Insert.insertUser(user1);
+        User user2 = new User("hej", "då");
+       SQLite.Insert.insertUser(user2);
         /*ArrayList<Market> allMarkets = alphaVantage.getMarkets();
         for (Market m : allMarkets) {
             sqLite.insertMarket(m);
@@ -68,6 +72,7 @@ public class test {
         ArrayList<Stock> stocks = alphaVantage.timeSeriesDailyAdjusted("ARVN");
         Stock AAPL = alphaVantage.companyOverview("AAPL");
         System.out.println(alphaVantage.companyOverview("lskldkl"));
+
 
         //System.out.println(alphaVantage.searchEndpoint("bra"));
         //System.out.println(stocks.get(0).getSymbol());
@@ -81,17 +86,14 @@ public class test {
      //  sqLite.insertTransaction(user1, 10, stocks.get(0).getPrice(), stock1.getSymbol());
       // sqLite.updateBuy(10, 80000.0, user1, stock1.getSymbol());
 
-        User u = new User("9906220101", "hej");
-        sqLite.insertUser(u);
-        sqLite.insertTransaction(u, 10, stock1.getPrice(), stock1.getSymbol());
+
+        SQLite.Insert.insertTransaction(u, 10, stock1.getPrice(), stock1.getSymbol());
         sqLite.updateBuy(5, stock1.getPrice()*0.2, u, stock1.getSymbol());
-        sqLite.insertUser(user);
-        sqLite.insertTransaction(user, 10, 10.0, stock1.getSymbol());
+        SQLite.Insert.insertTransaction(user, 10, 10.0, stock1.getSymbol());
         sqLite.updateBuy(10, 0.5, user, stock1.getSymbol());
-        User user2 = new User("hej", "då");
-        sqLite.insertUser(user2);
+
         //sqLite.updateBuy(100, 1.0, user2, stock1.getSymbol());
-        sqLite.insertTransaction(user2, 20, stock1.getPrice(), stock1.getSymbol());
+        SQLite.Insert.insertTransaction(user2, 20, stock1.getPrice(), stock1.getSymbol());
         System.out.println("HEJ");
         System.out.println(stock1.getSymbol());
         System.out.println(sqLite.isAllowedSell(user2, 10, stock1.getSymbol(), 10.0));
