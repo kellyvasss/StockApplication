@@ -165,18 +165,20 @@ public class SQLite {
         }
         return succes;
     }
-
-    // lägger till ett sälj i out
+    // lägger till ett sälj i out + uppdaterar dim_user cash
     public Boolean insertTransactionOut(User user, Integer quantity, Double price, String symbol) {
         Boolean succes = true;
+        Integer id = security(user); // Här är det smartare att lägga metoden innan utförandet då vi behöver den två gånger
         Integer buy_id = getBuyID(user, symbol);
         try {
             PreparedStatement prepared = conn.prepareStatement(Statements.FactTransaction.insertSell);
-            prepared.setInt(1, security(user));
+            prepared.setInt(1, id);
             prepared.setInt(2, stock(symbol));
             prepared.setInt(3, buy_id);
             prepared.setInt(4, quantity);
             prepared.setDouble(5, price);
+            prepared.setDouble(6, price * quantity);
+            prepared.setInt(7, id);
             prepared.executeUpdate();
         } catch (SQLException e) {
             System.out.println("fel med att insert into fact_transaction_out " + e.getMessage());
@@ -366,6 +368,21 @@ public class SQLite {
             System.out.println("fel med att hämta holdings " + e.getMessage());
         }
         return results;
+    }
+    public Double[] getBalanceAndGrowth(User user) {
+        Double[] balanceAndGrowth = new Double[2];
+        try {
+            PreparedStatement prepared = conn.prepareStatement(Statements.FactTransaction.getGrowthAndBalance);
+            prepared.setDouble(1, Double.valueOf(user.getCash()));
+            prepared.setInt(2, security(user));
+            ResultSet rs = prepared.executeQuery();
+            if(rs.next()) {
+                balanceAndGrowth[0] = rs.getDouble("p");
+                balanceAndGrowth[1] = rs.getDouble("b");
+            } return balanceAndGrowth;
+        } catch (SQLException e) {
+            System.out.println("fel med att hämta balance and growth " + e.getMessage());
+        } return null;
     }
 
     // returnerar user_id för aktuell user

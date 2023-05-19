@@ -103,7 +103,10 @@ public final class Statements {
     }
 
     static final class FactTransaction {
-        // ändra dim_stock till d, fact_in till fin, fact_out till out
+        // Balance är vad man har för värde på sina aktier + belopp som ej använts
+        // Förändring i procent räknas ut med formel ((nytt värde - ursprungliga värde) / ursprungliga värde) * 100
+        static final String getGrowthAndBalance = "SELECT ((SUM(approxValue) - 100000.0) / 100000.0) * 100 AS p,\n"
+                + "SUM(approxValue) + ? AS b FROM fact_transaction_in WHERE user_id = ?";
         static final String getUserStatusHoldings = "SELECT d.name n, d.symbol s, fin.quantity q, "
                 + "fin.price p, fin.approxValue / (fin.price * fin.quantity) AS g \n"
                 + "FROM fact_transaction_in fin \n"
@@ -140,7 +143,8 @@ public final class Statements {
                 + "FOREIGN KEY (buy_id) REFERENCES fact_transaction_in(id));";
         // lägg till en rad i out(sälj)
         static final String insertSell = "INSERT INTO fact_transaction_out(user_id, stock_id, \n"
-                + "buy_id, quantity, price, date) VALUES(?,?,?,?,?,date('now'))";
+                + "buy_id, quantity, price, date) VALUES(?,?,?,?,?,date('now'));\n"
+                + "UPDATE dim_user SET cash = cash + ? WHERE id = ?;";
         // vid sälj av alla aktier
         static final String sellAllStocks = "DELETE FROM fact_transaction_in WHERE user_id = ? AND stock_id = ?;";
         // när man vill veta vilket köp säljet tillhör

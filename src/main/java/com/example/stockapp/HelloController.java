@@ -7,6 +7,7 @@ import api.KeyReader;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
 import stock.Stock;
 import user.Hasher;
@@ -29,10 +30,18 @@ public class HelloController {
     private VBox loginBox;
     @FXML
     private TextField personNumbField;
+    @FXML
+    private AnchorPane status;
+    @FXML
+    private Label balance;
+    @FXML
+    private Label growth;
 
     @FXML
     private PasswordField passwordField;
     private User user;
+    private int attempts = 0; // Tre försök att skriva in rätt lösenord
+
 
 
     public HelloController() {
@@ -47,12 +56,15 @@ public class HelloController {
         if(NumberValidator.isNumeric(userNumber) && NumberValidator.isLenTen(userNumber)) {
             try {
                 user = sqLite.getUser(userNumber);
-                int attempts = 0; // Tre försök att skriva in rätt lösenord
                 while (attempts < 3) {
                     if (Hasher.verify(password, user.getPassword(), user.getPasSalt())) {
                         // Här har användaren skrivit in rätt lösenord och den finns i databasen.
                         // Låt programmet fortsätta och dölj inloggnings fälten och visa
                         // lables med användarens balance och growth och aktuellt innehav.
+                        balance.setText(user.getCash());
+                        growth.
+                        status.setVisible(true);
+
                     }
                     else {
                         // Här har användaren skrivit in fel lösenord, men den finns i databasen.
@@ -70,6 +82,8 @@ public class HelloController {
                     // Nummret är ett giltligt svenskt personnummer
                     // Lägg till i databasen
 
+                } else {
+                    // Här har användaren angivit ett felaktigt personnummer
                 }
             }
         }

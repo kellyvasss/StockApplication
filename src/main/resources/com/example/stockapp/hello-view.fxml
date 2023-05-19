@@ -18,7 +18,7 @@
   </padding>
 
   <Label fx:id="welcomeText"/>
-  <AnchorPane>
+  <AnchorPane fx:id="status">
     <children>
     <Button text="Log out" onAction="#onLogOut" AnchorPane.topAnchor="0" AnchorPane.rightAnchor="0" />
       <Label fx:id="balance" AnchorPane.leftAnchor="60" scaleY="5" scaleX="5" visible="false"/>
