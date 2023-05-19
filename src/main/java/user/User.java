@@ -3,9 +3,8 @@ public class User {
     private String person_id; // personnummer
     private String password;
     private String pasSalt;
-    public User(String person_id, String password) {
+    public User(String person_id) {
         this.person_id = person_id;
-        this.password = password;
     }
     public String getPerson_id() {
         return person_id;

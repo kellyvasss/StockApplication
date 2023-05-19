@@ -383,6 +383,7 @@ public class SQLite {
         return sec;
     }
 
+
     // få ett id på vilket köp det är från in tbl
     public Integer getBuyID(User user, String symbol) {
         try {
