@@ -4,8 +4,10 @@ import SQL.MySQL;
 import SQL.SQLite;
 import api.AlphaVantage;
 import api.KeyReader;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.layout.VBox;
 import stock.Stock;
 import user.NumberValidator;
 import user.hash;
@@ -17,33 +19,32 @@ public class HelloController {
     private TextArea result;
     @FXML
     private Label welcomeText;
-    private TextInputDialog inputDialog;
+
     private KeyReader keyReader;
     private AlphaVantage alphaVantage;
     private SQLite sqLite;
-    private ButtonType btnLogIn;
+    @FXML
+    private VBox loginBox;
+    @FXML
+    private TextField personNumbField;
+
+    @FXML
+    private PasswordField passwordField;
+
 
     public HelloController() {
         keyReader = new KeyReader("Alpha");
         alphaVantage = new AlphaVantage(keyReader.getAPIKey());
-        inputDialog = new TextInputDialog();
-        inputDialog.setTitle("Logga in");
-        inputDialog.setHeaderText(null);
-        inputDialog.setContentText("Personnummer:");
-        btnLogIn = new ButtonType("Logga in");
-        Optional<String> optional = inputDialog.showAndWait();
-        String user = optional.get();
-
 
     }
-
+    public void onLoginButtonClick() {
+        String password = passwordField.getText();
+        String userNumber = personNumbField.getText();
+    }
 
     @FXML
-    protected void onHelloButtonClick() {
+    protected void onLogOut() {
 
-        welcomeText.setText("Welcome to JavaFX Application!");
-        //result.setText(alphaVantage.searchEndpoint(result.getText()));
-        search();
     }
     private void logIn() {
 
@@ -70,4 +71,6 @@ public class HelloController {
             }
         }
     }
+
+
 }

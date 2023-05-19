@@ -373,7 +373,7 @@ public class SQLite {
         Integer sec = null;
         try {
             PreparedStatement prepared = conn.prepareStatement(Statements.DimUser.selectID);
-            prepared.setString(1, user.getPerson_id());
+            prepared.setInt(1, Integer.valueOf(user.getPerson_id()));
             ResultSet rs = prepared.executeQuery();
             sec = rs.getInt("id");
         } catch (SQLException e) {

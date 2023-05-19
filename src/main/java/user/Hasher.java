@@ -1,8 +1,16 @@
 package user;
 import org.apache.shiro.crypto.hash.SimpleHash;
 import org.apache.shiro.util.ByteSource;
-
 import java.security.SecureRandom;
+
+
+/**
+ * Klass används för att hasha lösenord. Andvänd i följande ordning:
+ *
+ * 1. Generera salt med "generateSalt().toString() och tilldela det till new User om User INTE finns i databasen
+ * 2. Tilldela det krypterade lösenordet till User med hash("lösenord", ByteSource.Util.bytes(u.getPasSalt())
+ * 3. Vid verifiering använd "verify("lösenord", user.getPassword(), user.getPasSalt())
+ */
 
 public class Hasher {
 
@@ -18,22 +26,13 @@ public class Hasher {
         random.nextBytes(saltBytes);
         return ByteSource.Util.bytes(saltBytes);
     }
-
     // Kontrollerar genom att ta in användarens inskrivna uppgift, användarens lagrade uppgift + salt
     // och kör samma krypteringsalgoritm för att kolla om värdena stämmer
     public static Boolean verify(String raw, String hashed, String salt) {
-        byte[] bytes = convertFromStr(salt);
-        String toVerify = new SimpleHash("SHA-256", raw, bytes,100).toHex();
+        ByteSource b = ByteSource.Util.bytes(salt);
+        String toVerify = new SimpleHash("SHA-256", raw, b,100).toHex();
+        System.out.println("från verify lösenord: " + toVerify);
         return toVerify.equals(hashed);
-    }
-    public static byte[] convertFromStr(String salt) {
-        byte[] saltBytes = new byte[salt.length()/2];
-        for (int i = 0; i < saltBytes.length; i++) {
-            int index = i * 2;
-            int j = Integer.parseInt(salt.substring(index, index + 2), 16);
-            saltBytes[i] = (byte) j;
-        }
-        return saltBytes;
     }
 }
 
