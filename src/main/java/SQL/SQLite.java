@@ -387,15 +387,15 @@ public class SQLite {
         }
         return results;
     }
-    public Double[] getBalanceAndGrowth(User user) {
-        Double[] balanceAndGrowth = new Double[2];
+    public String[] getBalanceAndGrowth(User user) {
+        String[] balanceAndGrowth = new String[2];
         try {
             PreparedStatement prepared = conn.prepareStatement(Statements.FactTransaction.getGrowthAndBalance);
             prepared.setInt(1, security(user));
             ResultSet rs = prepared.executeQuery();
             if(rs.next()) {
-                balanceAndGrowth[0] = rs.getDouble("p");
-                balanceAndGrowth[1] = rs.getDouble("b");
+                balanceAndGrowth[0] = String.valueOf(rs.getDouble("p"));
+                balanceAndGrowth[1] = String.valueOf(rs.getDouble("b"));
             } return balanceAndGrowth;
         } catch (SQLException e) {
             System.out.println("fel med att hämta balance and growth " + e.getMessage());

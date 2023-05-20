@@ -106,7 +106,7 @@ public final class Statements {
         // Balance är vad man har för värde på sina aktier + belopp som ej använts
         // Förändring i procent räknas ut med formel ((nytt värde - ursprungliga värde) / ursprungliga värde) * 100
         static final String getGrowthAndBalance = "SELECT (((SUM(fin.approxValue) + d.cash) - 100000.0) / 100000.0) * 100 AS p,\n" // ((nytt värde - gammaltvärde) / gammaltvärde) *100
-                + "SUM(fin.approxValue) + d.cash AS b \n" + // uppskattat värde + innestående cash
+                + "(SUM(fin.approxValue) + d.cash) AS b \n" + // uppskattat värde + innestående cash
                 "FROM fact_transaction_in fin \n" +
                 "JOIN dim_user d ON fin.user_id = d.id WHERE user_id = ?";
         static final String getUserStatusHoldings = "SELECT d.name n, d.symbol s, fin.quantity q, "

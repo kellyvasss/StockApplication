@@ -87,7 +87,9 @@ public class HelloController {
                     user.setPasSalt(Hasher.generateSalt().toString());
                     user.setPassword(Hasher.hash(password, ByteSource.Util.bytes(user.getPasSalt())));
                     sqLite.insertUser(user); // <- Lägg till användaren i databasen
-                    // Fortsätt programmet, sätt status till visible
+                    // Fortsätt programmet, sätt status till visible och dölj inloggningsrutan
+                    loginBox.setVisible(false);
+                    setUserStatus();
 
 
                 } else {
@@ -103,9 +105,14 @@ public class HelloController {
         }
     }
     private void setUserStatus() {
-        Double[] res = sqLite.getBalanceAndGrowth(user);
-        growth.setText(String.valueOf(res[0]));
-        balance.setText(String.valueOf(res[1]));
+        String[] res = sqLite.getBalanceAndGrowth(user);
+        growth.setText(res[0] + " %");
+        balance.setText(res[1]);
+        status.setVisible(true);
+        growth.setVisible(true);
+        balance.setVisible(true);
+
+
     }
 
     private void checkPassword(String password) {
@@ -116,9 +123,8 @@ public class HelloController {
                 // Här har användaren skrivit in rätt lösenord och den finns i databasen.
                 // Låt programmet fortsätta och dölj inloggnings fälten och visa
                 // lables med användarens balance och growth och aktuellt innehav.
+                setUserStatus();
 
-                growth.setText("Hej");
-                status.setVisible(true);
             }
             else {
                 // Här har användaren skrivit in fel lösenord, men den finns i databasen.

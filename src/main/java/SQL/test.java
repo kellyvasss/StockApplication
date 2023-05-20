@@ -71,7 +71,7 @@ public class test {
         System.out.println(sqLite.isAllowedSell(user, 9, "AAPL", 10.0));
         //sqLite.insertTransactionOut(user, 1, 170.0, "AAPL");
         System.out.println(user.getCash());
-        Double[] b = sqLite.getBalanceAndGrowth(user);
+        String[] b = sqLite.getBalanceAndGrowth(user);
         System.out.println(b[0] + " %");
         System.out.println(b[1]);
         /*
