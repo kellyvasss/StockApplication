@@ -10,7 +10,9 @@ import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import org.apache.shiro.util.ByteSource;
+import stock.Market;
 import stock.Stock;
 import user.Hasher;
 import user.NumberValidator;
@@ -39,9 +41,14 @@ public class HelloController {
     private Label balance;
     @FXML
     private Label growth;
-
+    @FXML
+    private Label lblPassword;
+    @FXML
+    private Button btnLogIn;
     @FXML
     private PasswordField passwordField;
+    @FXML
+    private Label lblPersNumb;
     private User user;
     private int attempts = 0; // Tre försök att skriva in rätt lösenord
     private TextInputDialog textInputDialog;
@@ -60,6 +67,18 @@ public class HelloController {
         alert.setHeaderText(null);
         alert.setContentText(content);
         alert.showAndWait();
+    }
+    private void showMarkets() {
+        String markets = "";
+        ArrayList<Market> m = alphaVantage.getMarkets();
+        for (Market mar : m) {
+             markets += "Name: " + mar.getName()
+                     + "\nRegion: " + mar.getCountry()
+                     + "\nOpen: " + mar.getOpen()
+                     + "\nClose: " + mar.getClose()
+                     + "\nNote: " + mar.getNote()
+                     + "\n-------------------------\n";
+        } result.setText(markets);
     }
     public void onLoginButtonClick() {
         String password = passwordField.getText();
@@ -89,7 +108,8 @@ public class HelloController {
                     sqLite.insertUser(user); // <- Lägg till användaren i databasen
                     // Fortsätt programmet, sätt status till visible och dölj inloggningsrutan
                     loginBox.setVisible(false);
-                    setUserStatus(user);
+                    setUserStatus();
+                    updateUserStatus();
 
 
                 } else {
@@ -104,14 +124,28 @@ public class HelloController {
             setAlert("catch", "catch");
         }
     }
-    private void setUserStatus(User user) {
-        String[] res = sqLite.getBalanceAndGrowth(user);
+    private void updateUserStatus() {
+        Double[] res = sqLite.getBalanceAndGrowth(user);
+        growth.setText(res[0] + " %");
+        if(res[0] < 0) {
+            growth.setTextFill(Color.RED);
+        } else if (res[0] > 0){
+            growth.setTextFill(Color.GREEN);
+        } else {
+            growth.setTextFill(Color.YELLOW);
+        }
+        balance.setText(res[1].toString());
+    }
+    private void setUserStatus() {
         status.setVisible(true);
         growth.setVisible(true);
         balance.setVisible(true);
-        growth.setText(res[0] + " %");
-        balance.setText(res[1]);
-
+        btnLogIn.setVisible(false);
+        lblPassword.setVisible(false);
+        passwordField.setVisible(false);
+        lblPersNumb.setText("SÖK");
+        result.setVisible(true);
+        showMarkets();
     }
 
     private void checkPassword(String password) {
@@ -122,7 +156,8 @@ public class HelloController {
                 // Här har användaren skrivit in rätt lösenord och den finns i databasen.
                 // Låt programmet fortsätta och dölj inloggnings fälten och visa
                 // lables med användarens balance och growth och aktuellt innehav.
-                setUserStatus(user);
+                setUserStatus();
+                updateUserStatus();
 
             }
             else {

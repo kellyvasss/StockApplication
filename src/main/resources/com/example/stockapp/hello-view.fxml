@@ -11,7 +11,7 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.TextField?>
-<VBox alignment="CENTER" spacing="20.0" xmlns:fx="http://javafx.com/fxml"
+<VBox alignment="CENTER" spacing="20.0" xmlns:fx="http://javafx.com/fxml" style="-fx-background-color: #000000;"
       fx:controller="com.example.stockapp.HelloController">
   <padding>
     <Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/>
@@ -21,17 +21,26 @@
   <AnchorPane fx:id="status">
     <children>
     <Button text="Log out" onAction="#onLogOut" AnchorPane.topAnchor="0" AnchorPane.rightAnchor="0" />
-      <Label fx:id="balance" AnchorPane.leftAnchor="60" scaleY="5" scaleX="5" visible="false"/>
+      <Label fx:id="balance" AnchorPane.leftAnchor="90" scaleY="5" scaleX="5" visible="false"/>
       <Label fx:id="growth" AnchorPane.leftAnchor="500" scaleY="5" scaleX="5" visible="false"/>
   </children>
   </AnchorPane>
   <VBox fx:id="loginBox" spacing="10">
-    <Label text="Personnummer: " />
+    <Label text="Personnummer: "  fx:id="lblPersNumb"/>
     <TextField fx:id="personNumbField" />
-    <Label text="Lösenord: " />
+    <Label text="Lösenord: " fx:id="lblPassword" />
     <PasswordField fx:id="passwordField" />
-    <Button text="Log in" onAction="#onLoginButtonClick" />
+    <HBox spacing="25.0">
+      <Button text="Log in" onAction="#onLoginButtonClick" fx:id="btnLogIn"/>
+      <Button fx:id="button1" text="Knapp 1"/>
+      <Button fx:id="button2" text="Knapp 2"/>
+    </HBox>
   </VBox>
 
-  <TextArea fx:id="result" visible="false"/>
+  <HBox spacing="20.0">
+    <TextArea fx:id="result" visible="false" editable="false" prefWidth="400" maxWidth="400"/>
+    <TextArea fx:id="result1" visible="true" editable="false" prefWidth="400" maxWidth="400"/>
+  </HBox>
+
 </VBox>
+

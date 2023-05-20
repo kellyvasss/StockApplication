@@ -24,6 +24,7 @@ public class test {
         alphaVantage = new AlphaVantage(keyReader.getAPIKey());
 
 
+
        // System.out.println(alphaVantage.companyOverview("BA").getName());
 
         User u = new User("9906220101");
@@ -45,7 +46,7 @@ public class test {
         user.setPassword(Hasher.hash("hej", ByteSource.Util.bytes(user.getPasSalt())));
         sqLite.insertUser(user);
         User test = new User("9906220182");
-        String[] b = sqLite.getBalanceAndGrowth(test);
+        Double[] b = sqLite.getBalanceAndGrowth(test);
         System.out.println(b[0] + " %");
         System.out.println(b[1]);
         Stock stock = alphaVantage.companyOverview("AAPL");
@@ -64,6 +65,7 @@ public class test {
             s.setCountry(stock.getCountry());
             sqLite.insertFactStock(s);
         }*/
+
 
        // System.out.println(stock.getPrice());
      /*   sqLite.insertTransaction(user, 10, Double.valueOf((Double) alphaVantage.quote(stock.getSymbol())[1]), stock.getSymbol());
