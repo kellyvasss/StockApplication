@@ -13,6 +13,7 @@ import user.hash;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class test {
     static AlphaVantage alphaVantage;
@@ -25,7 +26,7 @@ public class test {
 
         System.out.println(alphaVantage.companyOverview("BA").getName());
 
-        User u = new User("990622010");
+        User u = new User("9906220101");
         u.setPasSalt(Hasher.generateSalt().toString());
         u.setPassword(Hasher.hash("hej", ByteSource.Util.bytes(u.getPasSalt())));
 
@@ -35,9 +36,39 @@ public class test {
 
         System.out.println(u.getPassword());
         System.out.println(Hasher.hash("hej", ByteSource.Util.bytes(u.getPasSalt())));
-        SQLite sqLite = new SQLite("m");
+        SQLite sqLite = new SQLite("l");
        // User u1 = sqLite.getUser("he");
         //System.out.println(u1.getCash() + u1.getPassword() + u1.getPasSalt());
+        //sqLite.insertDimStock(alphaVantage.companyOverview("BA"));
+        User user = new User("5566778899");
+        user.setPasSalt(Hasher.generateSalt().toString());
+        user.setPassword(Hasher.hash("hej", ByteSource.Util.bytes(user.getPasSalt())));
+        sqLite.insertUser(user);
+
+        Stock stock = alphaVantage.companyOverview("BABA");
+        ArrayList<Stock> a = alphaVantage.timeSeriesDailyAdjusted("BABA");
+       // sqLite.insertCurrency(stock);
+        sqLite.insertDimStock(stock);
+        //System.out.println(stock.getCurrency());
+      //  System.out.println(u.getPerson_id());
+        //System.out.println(stock.getCountry());
+        String info = String.valueOf(alphaVantage.quote(stock.getSymbol())[0]);
+        System.out.println(info);
+        System.out.println(stock.toString());
+        for (Stock s : a) {
+            s.setSymbol(stock.getSymbol());
+            s.setCurrency(stock.getCurrency());
+            s.setCountry(stock.getCountry());
+            sqLite.insertFactStock(s);
+        }
+        ArrayList<String> holdings = sqLite.getGetUserStatusHoldings(user);
+        for (String s: holdings) {
+            System.out.println(s);
+        }
+
+        System.out.println(stock.getPrice());
+
+        //sqLite.insertTransaction(user, 10, Double.valueOf((Double) alphaVantage.quote(stock.getSymbol())[1]), stock.getSymbol());
         try  {
             User uu = sqLite.getUser("hej");
             System.out.println("jej");

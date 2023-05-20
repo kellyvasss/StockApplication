@@ -62,7 +62,7 @@ public class HelloController {
                         // Låt programmet fortsätta och dölj inloggnings fälten och visa
                         // lables med användarens balance och growth och aktuellt innehav.
                         balance.setText(user.getCash());
-                        growth.
+                        growth.setText("Hej");
                         status.setVisible(true);
 
                     }

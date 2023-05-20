@@ -211,15 +211,14 @@ public class SQLite {
 
     // funkar
     void insertFactStock(Stock s) {
-        Integer stock = stock(s);
-        Integer currency = currency(s);
-        String sql = Statements.FactStock.insertFactStock;
+        //Integer stock = stock(s);
+        //Integer currency = currency(s);
         try {
-            PreparedStatement p = conn.prepareStatement(sql);
-            p.setInt(1, stock);
+            PreparedStatement p = conn.prepareStatement(Statements.FactStock.insertFactStock);
+            p.setInt(1, stock(s));
             p.setString(2, s.getDate());
             p.setDouble(3, s.getPrice());
-            p.setInt(4, currency);
+            p.setInt(4, currency(s));
             p.executeUpdate();
             p.close();
         } catch (SQLException e) {
@@ -360,7 +359,7 @@ public class SQLite {
                         + "\nSymbol: " + rs.getString("s")
                         + "\nQuantity: " + rs.getString("q")
                         + "\nBuy Price: " + rs.getString("p")
-                        + "\nGrowth: " + rs.getString("g") + "%";
+                        + "\nGrowth: " + rs.getString("g") + " %";
 
                 results.add(result);
             }
@@ -390,12 +389,13 @@ public class SQLite {
         Integer sec = null;
         try {
             PreparedStatement prepared = conn.prepareStatement(Statements.DimUser.selectID);
-            prepared.setInt(1, Integer.valueOf(user.getPerson_id()));
+            prepared.setString(1, (user.getPerson_id()));
             ResultSet rs = prepared.executeQuery();
-            sec = rs.getInt("id");
+            if (rs.next()) {
+                sec = rs.getInt("id");
+            }
         } catch (SQLException e) {
             System.out.println("fel med security metoden. " + e.getMessage());
-            return sec;
         }
         return sec;
     }

@@ -13,6 +13,17 @@ public class Stock {
     private Double price;
 
 
+    @Override
+    public String toString() {
+        return "Name: " + name
+                + "\nSymbol: " + symbol
+                + "\nDescription: " + description
+                + "\nExchange: " + exchange
+                + "\nSector: " + sector
+                + "\nIndustry: " + industry
+                + "\nCountry: " + country
+                + "\nCurrency: " + currency;
+    }
     public String getSymbol() {
         return symbol;
     }
