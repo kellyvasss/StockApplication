@@ -36,15 +36,18 @@ public class test {
 
         System.out.println(u.getPassword());
         System.out.println(Hasher.hash("hej", ByteSource.Util.bytes(u.getPasSalt())));
-        SQLite sqLite = new SQLite("l");
+        SQLite sqLite = new SQLite("m");
        // User u1 = sqLite.getUser("he");
         //System.out.println(u1.getCash() + u1.getPassword() + u1.getPasSalt());
         //sqLite.insertDimStock(alphaVantage.companyOverview("BA"));
-        User user = new User("2121212121");
+        User user = new User("9906220182");
         user.setPasSalt(Hasher.generateSalt().toString());
         user.setPassword(Hasher.hash("hej", ByteSource.Util.bytes(user.getPasSalt())));
         sqLite.insertUser(user);
-
+        User test = new User("9906220182");
+        String[] b = sqLite.getBalanceAndGrowth(test);
+        System.out.println(b[0] + " %");
+        System.out.println(b[1]);
         Stock stock = alphaVantage.companyOverview("AAPL");
        // ArrayList<Stock> a = alphaVantage.timeSeriesDailyAdjusted("AAPL");
        // sqLite.insertCurrency(stock);
@@ -63,7 +66,7 @@ public class test {
         }*/
 
        // System.out.println(stock.getPrice());
-        sqLite.insertTransaction(user, 10, Double.valueOf((Double) alphaVantage.quote(stock.getSymbol())[1]), stock.getSymbol());
+     /*   sqLite.insertTransaction(user, 10, Double.valueOf((Double) alphaVantage.quote(stock.getSymbol())[1]), stock.getSymbol());
         ArrayList<String> holdings = sqLite.getGetUserStatusHoldings(user);
         for (String s: holdings) {
             System.out.println(s);
@@ -71,9 +74,8 @@ public class test {
         System.out.println(sqLite.isAllowedSell(user, 9, "AAPL", 10.0));
         //sqLite.insertTransactionOut(user, 1, 170.0, "AAPL");
         System.out.println(user.getCash());
-        String[] b = sqLite.getBalanceAndGrowth(user);
-        System.out.println(b[0] + " %");
-        System.out.println(b[1]);
+
+        */
         /*
         try  {
             User uu = sqLite.getUser("hej");
