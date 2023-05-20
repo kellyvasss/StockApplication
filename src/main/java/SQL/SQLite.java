@@ -110,9 +110,12 @@ public class SQLite {
     }
 
     // uppdatera in tbl sätt nytt antal, pris -> läs i Statementklass för att förstå parametrarna
+    // Används när det sker ett köp av en aktie det redan finns i innehavet
+    // uppdatera user cash
     Boolean updateBuy(Integer quantity, Double price, User user, String symbol) {
         Boolean succes = true;
         try {
+            // Första query
             PreparedStatement prepared = conn.prepareStatement(Statements.FactTransaction.updateBuy);
             prepared.setInt(1, quantity); // <- antal = antal + antal
             prepared.setInt(2, quantity); // <- nytt antal köpta *
@@ -126,10 +129,21 @@ public class SQLite {
             prepared.setInt(10, security(user));
             prepared.setInt(11, stock(symbol));
             prepared.executeUpdate();
+            updateCashBuy(user, quantity, price);
         } catch (SQLException e) {
             succes = false;
         }
         return succes;
+    }
+    private void updateCashBuy(User user, Integer quantity, Double price) {
+        try {
+            PreparedStatement prep = conn.prepareStatement(Statements.FactTransaction.updateCash);
+            prep.setDouble(1, price*quantity);
+            prep.setInt(2, security(user));
+            prep.executeUpdate();
+        } catch (SQLException e) {
+            System.out.println("fel med updateCashBuy " + e.getMessage());
+        }
     }
 
     // lägger till en användare
@@ -148,17 +162,24 @@ public class SQLite {
         return succes;
     }
 
-    // lägger till ett köp i in
+    // lägger till ett köp i in + uppdaterar cash för user
+    static final String insert = "INSERT INTO fact_transaction_in(user_id, stock_id, \n"
+            + "quantity, price, approxValue, date, growth) VALUES(?,?,?,?,?, date('now'),0.0);";
+
+
     public Boolean insertTransaction(User user, Integer quantity, Double price, String symbol) {
         Boolean succes = true;
+        Integer id = security(user); // denna behövs två gånger och därför smartare att utföra den direkt
         try {
+            // Första query
             PreparedStatement prepared = conn.prepareStatement(Statements.FactTransaction.insert);
-            prepared.setInt(1, security(user));
+            prepared.setInt(1, id);
             prepared.setInt(2, stock(symbol));
             prepared.setInt(3, quantity);
             prepared.setDouble(4, price);
             prepared.setDouble(5, price * quantity);
             prepared.executeUpdate();
+            updateCashBuy(user,quantity,price);
         } catch (SQLException e) {
             System.out.println("fel med att insert into fact_transaction_in " + e.getMessage());
             succes = false;
@@ -168,18 +189,16 @@ public class SQLite {
     // lägger till ett sälj i out + uppdaterar dim_user cash
     public Boolean insertTransactionOut(User user, Integer quantity, Double price, String symbol) {
         Boolean succes = true;
-        Integer id = security(user); // Här är det smartare att lägga metoden innan utförandet då vi behöver den två gånger
         Integer buy_id = getBuyID(user, symbol);
         try {
             PreparedStatement prepared = conn.prepareStatement(Statements.FactTransaction.insertSell);
-            prepared.setInt(1, id);
+            prepared.setInt(1, security(user));
             prepared.setInt(2, stock(symbol));
             prepared.setInt(3, buy_id);
             prepared.setInt(4, quantity);
             prepared.setDouble(5, price);
-            prepared.setDouble(6, price * quantity);
-            prepared.setInt(7, id);
             prepared.executeUpdate();
+            updateCashSell(user, quantity, price);
         } catch (SQLException e) {
             System.out.println("fel med att insert into fact_transaction_out " + e.getMessage());
             succes = false;
@@ -372,8 +391,7 @@ public class SQLite {
         Double[] balanceAndGrowth = new Double[2];
         try {
             PreparedStatement prepared = conn.prepareStatement(Statements.FactTransaction.getGrowthAndBalance);
-            prepared.setDouble(1, Double.valueOf(user.getCash()));
-            prepared.setInt(2, security(user));
+            prepared.setInt(1, security(user));
             ResultSet rs = prepared.executeQuery();
             if(rs.next()) {
                 balanceAndGrowth[0] = rs.getDouble("p");
@@ -500,6 +518,16 @@ public class SQLite {
         } catch (SQLException e) {
         }
     }
+    private void updateCashSell(User user, Integer quantity, Double price) {
+        try {
+            PreparedStatement prepared = conn.prepareStatement(Statements.FactTransaction.updateCashSell);
+            prepared.setDouble(1, price*quantity);
+            prepared.setInt(2, security(user));
+            prepared.executeUpdate();
+        } catch (SQLException e) {
+            System.out.println("fel med updateCashSell " + e.getMessage());
+        }
+    }
 
     // funkar returnerar true om antalet att vilja sälja är mindre eller lika med antal som finns
     Boolean isAllowedSell(User user, Integer quantity, String symbol, Double price) {
@@ -512,33 +540,20 @@ public class SQLite {
             if (rs.next()) { // om det finns quantity i tabellen
                 Integer q = rs.getInt("q");
                 if (q == quantity || q == 0) { // om antalet önskat sälj är lika med antalet som finns eller om antalet är 0
-                    sell(user, quantity, symbol, price); // låt sell ta hand om det ska uppdateras/läggas till
                     sellAll(user, symbol); // sälj och radera raden
+                    insertTransactionOut(user, quantity, price, symbol); // lägg till en rad i sälj tabellen
+                    updateCashSell(user, quantity, price); // uppdaterar antal pengar usern har
                 } else if (q > quantity) { // om antalet som finns är mer än önskat sälj
                     updateBuySub(quantity, price, user, symbol); // uppdatera in tbl till nytt antal och pris
-                    sell(user, quantity, symbol, price); // lägg in ett sälj i out tbl
+                    insertTransactionOut(user, quantity, price, symbol); // lägg till rad i sälj tabell
+                    updateCashSell(user, quantity, price); // uppdatera cash user har
                 }
             }
             return rs.getInt("q") >= quantity; // om antalet som finns är mer eller lika med än önskat sälj = true
 
         } catch (SQLException e) {
             succes = false;
-        }
-        return succes;
-    }
-
-    // lägger in en ny rad i out tbl om det finns ett köp
-    void sell(User user, Integer quantity, String symbol, Double price) {
-        try {
-            PreparedStatement pp = conn.prepareStatement("SELECT id FROM fact_transaction_out WHERE buy_id =?");
-            pp.setInt(1, getBuyID(user, symbol));
-            ResultSet r = pp.executeQuery();
-            if (r.next()) { // om det finns ett id som matchar
-                insertTransactionOut(user, quantity, price, symbol); // uppdatera out
-                updateBuySub(quantity, price, user, symbol); // uppdatera in
-            }
-        } catch (SQLException e) {
-        }
+        } throw new RuntimeException();
     }
 
 }

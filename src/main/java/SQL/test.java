@@ -24,7 +24,7 @@ public class test {
         alphaVantage = new AlphaVantage(keyReader.getAPIKey());
 
 
-        System.out.println(alphaVantage.companyOverview("BA").getName());
+       // System.out.println(alphaVantage.companyOverview("BA").getName());
 
         User u = new User("9906220101");
         u.setPasSalt(Hasher.generateSalt().toString());
@@ -40,35 +40,41 @@ public class test {
        // User u1 = sqLite.getUser("he");
         //System.out.println(u1.getCash() + u1.getPassword() + u1.getPasSalt());
         //sqLite.insertDimStock(alphaVantage.companyOverview("BA"));
-        User user = new User("5566778899");
+        User user = new User("2121212121");
         user.setPasSalt(Hasher.generateSalt().toString());
         user.setPassword(Hasher.hash("hej", ByteSource.Util.bytes(user.getPasSalt())));
         sqLite.insertUser(user);
 
-        Stock stock = alphaVantage.companyOverview("BABA");
-        ArrayList<Stock> a = alphaVantage.timeSeriesDailyAdjusted("BABA");
+        Stock stock = alphaVantage.companyOverview("AAPL");
+       // ArrayList<Stock> a = alphaVantage.timeSeriesDailyAdjusted("AAPL");
        // sqLite.insertCurrency(stock);
-        sqLite.insertDimStock(stock);
+       // sqLite.insertDimStock(stock);
         //System.out.println(stock.getCurrency());
       //  System.out.println(u.getPerson_id());
         //System.out.println(stock.getCountry());
-        String info = String.valueOf(alphaVantage.quote(stock.getSymbol())[0]);
-        System.out.println(info);
-        System.out.println(stock.toString());
-        for (Stock s : a) {
+       // String info = String.valueOf(alphaVantage.quote(stock.getSymbol())[0]);
+       // System.out.println(info);
+       // System.out.println(stock.toString());
+      /*  for (Stock s : a) {
             s.setSymbol(stock.getSymbol());
             s.setCurrency(stock.getCurrency());
             s.setCountry(stock.getCountry());
             sqLite.insertFactStock(s);
-        }
+        }*/
+
+       // System.out.println(stock.getPrice());
+        sqLite.insertTransaction(user, 10, Double.valueOf((Double) alphaVantage.quote(stock.getSymbol())[1]), stock.getSymbol());
         ArrayList<String> holdings = sqLite.getGetUserStatusHoldings(user);
         for (String s: holdings) {
             System.out.println(s);
         }
-
-        System.out.println(stock.getPrice());
-
-        //sqLite.insertTransaction(user, 10, Double.valueOf((Double) alphaVantage.quote(stock.getSymbol())[1]), stock.getSymbol());
+        System.out.println(sqLite.isAllowedSell(user, 9, "AAPL", 10.0));
+        //sqLite.insertTransactionOut(user, 1, 170.0, "AAPL");
+        System.out.println(user.getCash());
+        Double[] b = sqLite.getBalanceAndGrowth(user);
+        System.out.println(b[0] + " %");
+        System.out.println(b[1]);
+        /*
         try  {
             User uu = sqLite.getUser("hej");
             System.out.println("jej");
@@ -76,7 +82,7 @@ public class test {
         }
          catch (RuntimeException e) {
             System.out.println("fångade" + e.getMessage());
-        }
+        }*/
 
 }
 }

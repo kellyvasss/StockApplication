@@ -7,7 +7,7 @@ public class NumberValidator {
     // Kontrollerar om input är av numerisk value
     public static Boolean isNumeric(String id) {
         try {
-            Integer a = Integer.valueOf(id);
+            Long a = Long.valueOf(id);
             return true;
         } catch (NumberFormatException e) {
             return false;

@@ -90,8 +90,8 @@ public final class Statements {
     }
 
     static final class DimUser {
-        // alla users ska få 10000 att handla för
-        static final String insert = "INSERT INTO dim_user(person_id, password, pas_salt, cash) VALUES(?,?,?,10000.0)";
+        // alla users ska få 100.000 att handla för
+        static final String insert = "INSERT INTO dim_user(person_id, password, pas_salt, cash) VALUES(?,?,?,100000.0)";
         static final String selectID = "SELECT id FROM dim_user WHERE person_id=?";
         static final String create = "CREATE TABLE IF NOT EXISTS dim_user (\n"
                 + "id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
@@ -105,10 +105,12 @@ public final class Statements {
     static final class FactTransaction {
         // Balance är vad man har för värde på sina aktier + belopp som ej använts
         // Förändring i procent räknas ut med formel ((nytt värde - ursprungliga värde) / ursprungliga värde) * 100
-        static final String getGrowthAndBalance = "SELECT ((SUM(approxValue) - 100000.0) / 100000.0) * 100 AS p,\n"
-                + "SUM(approxValue) + ? AS b FROM fact_transaction_in WHERE user_id = ?";
+        static final String getGrowthAndBalance = "SELECT (((SUM(fin.approxValue) + d.cash) - 100000.0) / 100000.0) * 100 AS p,\n" // ((nytt värde - gammaltvärde) / gammaltvärde) *100
+                + "SUM(fin.approxValue) + d.cash AS b \n" + // uppskattat värde + innestående cash
+                "FROM fact_transaction_in fin \n" +
+                "JOIN dim_user d ON fin.user_id = d.id WHERE user_id = ?";
         static final String getUserStatusHoldings = "SELECT d.name n, d.symbol s, fin.quantity q, "
-                + "fin.price p, fin.approxValue / (fin.price * fin.quantity) AS g \n"
+                + "fin.price p, (((fin.approxValue/fin.quantity) - fin.price) / fin.price) * 100 AS g \n" // ((nytt värde - gammaltvärde) / gammaltvärde) *100
                 + "FROM fact_transaction_in fin \n"
                 + "JOIN dim_stock d ON fin.stock_id = d.id \n"
                 + "WHERE user_id = ?";
@@ -128,7 +130,8 @@ public final class Statements {
                 + "UNIQUE(user_id, stock_id)"
                 + ");";
         static final String insert = "INSERT INTO fact_transaction_in(user_id, stock_id, \n"
-                + "quantity, price, approxValue, date, growth) VALUES(?,?,?,?,?, date('now'),0.0)";
+                + "quantity, price, approxValue, date, growth) VALUES(?,?,?,?,?, date('now'),0.0);";
+
         // inget value ska vara unikt här eftersom alla sälj är unika
         static final String createSell = "CREATE TABLE IF NOT EXISTS fact_transaction_out (\n"
                 + "id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
@@ -143,8 +146,8 @@ public final class Statements {
                 + "FOREIGN KEY (buy_id) REFERENCES fact_transaction_in(id));";
         // lägg till en rad i out(sälj)
         static final String insertSell = "INSERT INTO fact_transaction_out(user_id, stock_id, \n"
-                + "buy_id, quantity, price, date) VALUES(?,?,?,?,?,date('now'));\n"
-                + "UPDATE dim_user SET cash = cash + ? WHERE id = ?;";
+                + "buy_id, quantity, price, date) VALUES(?,?,?,?,?,date('now'));";
+
         // vid sälj av alla aktier
         static final String sellAllStocks = "DELETE FROM fact_transaction_in WHERE user_id = ? AND stock_id = ?;";
         // när man vill veta vilket köp säljet tillhör
@@ -156,6 +159,8 @@ public final class Statements {
         // procentuella ökning = approx / (getValue*antal)
         // utveckling räknas ut (getValue - approxValue) / getValue -> growth
         // uppdaterar köp vid köp av fler aktier som redan finns i befintligt holdings.
+        static final String updateCash = "UPDATE dim_user SET cash = cash - ? WHERE id = ?;"; // uppdatera antal pengar user har att handla för när köp
+        static final String updateCashSell = "UPDATE dim_user SET cash = cash + ? WHERE id = ?;"; // uppdatera antal pengar user har att handla för vid sälj
         static final String updateBuy = "UPDATE fact_transaction_in\n"
                 + "SET quantity = quantity + ?, price = (( price * quantity )+( ? * ? ))/( quantity + ? ), approxValue = ?*(?+quantity), \n"
                 + "growth = (? - ((price + ?)/2)) / ((price + ?)/2) \n"

@@ -31,7 +31,6 @@ public class Hasher {
     public static Boolean verify(String raw, String hashed, String salt) {
         ByteSource b = ByteSource.Util.bytes(salt);
         String toVerify = new SimpleHash("SHA-256", raw, b,100).toHex();
-        System.out.println("från verify lösenord: " + toVerify);
         return toVerify.equals(hashed);
     }
 }
