@@ -16,30 +16,43 @@
   <padding>
     <Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/>
   </padding>
+  <HBox alignment="TOP_CENTER" spacing="300" >
+    <Label fx:id="balance" scaleY="5" scaleX="5" visible="false"/>
+    <Label fx:id="growth" scaleY="5" scaleX="5" visible="false"/>
+    <HBox alignment="CENTER_RIGHT" >
+      <Button text="Log out" onAction="#onLogOut" AnchorPane.topAnchor="0" AnchorPane.rightAnchor="0" />
+    </HBox>
 
-  <Label fx:id="welcomeText"/>
-  <AnchorPane fx:id="status">
+  </HBox>
+  <AnchorPane fx:id="status" visible="false">
     <children>
-    <Button text="Log out" onAction="#onLogOut" AnchorPane.topAnchor="0" AnchorPane.rightAnchor="0" />
-      <Label fx:id="balance" AnchorPane.leftAnchor="90" scaleY="5" scaleX="5" visible="false"/>
-      <Label fx:id="growth" AnchorPane.leftAnchor="500" scaleY="5" scaleX="5" visible="false"/>
+      <HBox spacing="25.0">
+        <Button fx:id="btnBuy" text="Buy" onAction="#onBuy" disable="true"/>
+        <Button fx:id="btnSell" text="Sell" onAction="#onSell" disable="true"/>
+        <Button fx:id="btnShowHoldings" text="Holdings" onAction="#onHoldings"/>
+        <Button fx:id="btnShowHistory" text="History" onAction="#onHistory"/>
+        <Button fx:id="btnMarket" text="Exchange hours" onAction="#onMarket"/>
+        <Button fx:id="btnSearch" text="Search" onAction="#onSearch" />
+      </HBox>
+
   </children>
   </AnchorPane>
   <VBox fx:id="loginBox" spacing="10">
-    <Label text="Personnummer: "  fx:id="lblPersNumb"/>
+    <Label text="Personnumber: "  fx:id="lblPersNumb"/>
     <TextField fx:id="personNumbField" />
-    <Label text="Lösenord: " fx:id="lblPassword" />
+    <Label text="Password: " fx:id="lblPassword" />
     <PasswordField fx:id="passwordField" />
-    <HBox spacing="25.0">
-      <Button text="Log in" onAction="#onLoginButtonClick" fx:id="btnLogIn"/>
-      <Button fx:id="button1" text="Knapp 1"/>
-      <Button fx:id="button2" text="Knapp 2"/>
+    <Button text="Log in" onAction="#onLoginButtonClick" fx:id="btnLogIn"/>
+    <HBox fx:id="amountBox" alignment="CENTER_RIGHT" >
+      <Label text="Amount" fx:id="lblAmount" />
     </HBox>
+
   </VBox>
 
   <HBox spacing="20.0">
-    <TextArea fx:id="result" visible="false" editable="false" prefWidth="400" maxWidth="400"/>
-    <TextArea fx:id="result1" visible="true" editable="false" prefWidth="400" maxWidth="400"/>
+    <TextArea fx:id="result" visible="false" editable="false" prefWidth="400" maxWidth="400" style="-fx-font-weight: bold;"/>
+    <TextArea fx:id="result1" visible="false" editable="false" prefWidth="400" maxWidth="400" style="-fx-font-weight: bold;"/>
+    <TextField fx:id="txfAmount" visible="true" editable="true"/>
   </HBox>
 
 </VBox>

@@ -2,18 +2,9 @@ package SQL;
 import api.AlphaVantage;
 import api.KeyReader;
 import org.apache.shiro.util.ByteSource;
-import stock.Market;
-import stock.Portfolio;
 import stock.Stock;
-import stock.StockBuilder;
 import user.Hasher;
 import user.User;
-import user.hash;
-
-import java.sql.Date;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Arrays;
 
 public class test {
     static AlphaVantage alphaVantage;

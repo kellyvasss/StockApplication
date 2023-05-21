@@ -1,14 +1,9 @@
 package SQL;
 
-import org.apache.shiro.session.mgt.DelegatingSession;
 import stock.Market;
-import stock.Portfolio;
 import stock.Stock;
 import user.User;
 import java.sql.*;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
 public class SQLite {
@@ -207,7 +202,7 @@ public class SQLite {
     }
 
     // funkar
-    void insertDimStock(Stock stock) {
+    public void insertDimStock(Stock stock) {
         Integer market = insertMarket(stock);
         Integer country = insertCountry(stock);
         Integer sector = insertSector(stock);
@@ -229,7 +224,7 @@ public class SQLite {
     }
 
     // funkar
-    void insertFactStock(Stock s) {
+    public void insertFactStock(Stock s) {
         //Integer stock = stock(s);
         //Integer currency = currency(s);
         try {
@@ -530,8 +525,7 @@ public class SQLite {
     }
 
     // funkar returnerar true om antalet att vilja sälja är mindre eller lika med antal som finns
-    Boolean isAllowedSell(User user, Integer quantity, String symbol, Double price) {
-        Boolean succes = true;
+    public Boolean isAllowedSell(User user, Integer quantity, String symbol, Double price) {
         try {
             PreparedStatement p = conn.prepareStatement(Statements.FactTransaction.isAllowedSell);
             p.setInt(1, security(user));
@@ -539,6 +533,9 @@ public class SQLite {
             ResultSet rs = p.executeQuery();
             if (rs.next()) { // om det finns quantity i tabellen
                 Integer q = rs.getInt("q");
+                if (q < quantity) {
+                    return false;
+                }
                 if (q == quantity || q == 0) { // om antalet önskat sälj är lika med antalet som finns eller om antalet är 0
                     sellAll(user, symbol); // sälj och radera raden
                     insertTransactionOut(user, quantity, price, symbol); // lägg till en rad i sälj tabellen
@@ -550,10 +547,9 @@ public class SQLite {
                 }
             }
             return rs.getInt("q") >= quantity; // om antalet som finns är mer eller lika med än önskat sälj = true
-
         } catch (SQLException e) {
-            succes = false;
-        } throw new RuntimeException();
+            throw new RuntimeException();
+        }
     }
 
 }

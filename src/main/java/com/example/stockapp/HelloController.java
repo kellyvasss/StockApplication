@@ -19,6 +19,7 @@ import user.NumberValidator;
 import user.User;
 import user.hash;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Optional;
 
@@ -26,8 +27,16 @@ public class HelloController {
     @FXML
     private TextArea result;
     @FXML
+    private TextArea result1;
+    @FXML
     private Label welcomeText;
-
+    @FXML
+    private Button btnBuy;
+    @FXML
+    private Button btnSell;
+    private Stock stock;
+    @FXML
+    private TextField txfAmount;
     private KeyReader keyReader;
     private AlphaVantage alphaVantage;
     private SQLite sqLite;
@@ -61,6 +70,7 @@ public class HelloController {
         sqLite = new SQLite("m");
         textInputDialog = new TextInputDialog();
         alert = new Alert(Alert.AlertType.INFORMATION);
+
     }
     private void setAlert(String title, String content) {
         alert.setTitle(title);
@@ -69,13 +79,12 @@ public class HelloController {
         alert.showAndWait();
     }
     private void showMarkets() {
-        String markets = "";
+        String markets = "MARKET STATUS:\n";
         ArrayList<Market> m = alphaVantage.getMarkets();
         for (Market mar : m) {
              markets += "Name: " + mar.getName()
                      + "\nRegion: " + mar.getCountry()
-                     + "\nOpen: " + mar.getOpen()
-                     + "\nClose: " + mar.getClose()
+                     + "\nOpen hours: " + mar.getOpen() + " - " + mar.getClose()
                      + "\nNote: " + mar.getNote()
                      + "\n-------------------------\n";
         } result.setText(markets);
@@ -107,7 +116,7 @@ public class HelloController {
                     user.setPassword(Hasher.hash(password, ByteSource.Util.bytes(user.getPasSalt())));
                     sqLite.insertUser(user); // <- Lägg till användaren i databasen
                     // Fortsätt programmet, sätt status till visible och dölj inloggningsrutan
-                    loginBox.setVisible(false);
+                    //loginBox.setVisible(false);
                     setUserStatus();
                     updateUserStatus();
 
@@ -143,9 +152,9 @@ public class HelloController {
         btnLogIn.setVisible(false);
         lblPassword.setVisible(false);
         passwordField.setVisible(false);
-        lblPersNumb.setText("SÖK");
+        lblPersNumb.setText("SEARCH");
         result.setVisible(true);
-        showMarkets();
+        result1.setVisible(true);
     }
 
     private void checkPassword(String password) {
@@ -158,7 +167,6 @@ public class HelloController {
                 // lables med användarens balance och growth och aktuellt innehav.
                 setUserStatus();
                 updateUserStatus();
-
             }
             else {
                 // Här har användaren skrivit in fel lösenord, men den finns i databasen.
@@ -194,17 +202,101 @@ public class HelloController {
     }
     // byt ut så att man ej söker i fönstret där resultat visas
     private void search() {
+        String search = getSearch();
+        if (search.isEmpty()) {
+            setAlert("No search", "Search for a company name or ticket/symbol.");
+            return;
+        }
         try {
-            result.setText(String.valueOf(alphaVantage.companyOverview(result.getText())));
+            stock = alphaVantage.companyOverview(search);
+            Object[] info = alphaVantage.quote(stock.getSymbol());
+            result.setText(stock.toString());
+            result1.setText((String) info[0] + "\nAnalyst target price: " + stock.getPrice());
+            stock.setPrice((Double) info[1]);
+            addStock();
+            activateBuySell(false);
         } catch (NullPointerException e) {
-            try {
-                result.setText(alphaVantage.searchEndpoint(result.getText()));
-            }
-            catch (NumberFormatException ee) {
-                result.setText("Ingen matchande sökning på " + result.getText());
+            result.setText(alphaVantage.searchEndpoint(search));
+            if (result.getText().isEmpty()) {
+                result.setText("No stock matching the search " + search);
             }
         }
+
+    }
+    private void addStock() {
+        String symbol = stock.getSymbol();
+        sqLite.insertDimStock(stock);
+        ArrayList<Stock> stocks = alphaVantage.timeSeriesDailyAdjusted(symbol);
+        for (Stock s: stocks) {
+            s.setCurrency(stock.getCurrency());
+            s.setCountry(stock.getCountry());
+            s.setSymbol(symbol);
+            sqLite.insertFactStock(s);
+        }
+    }
+    private void activateBuySell(Boolean b) {
+        btnBuy.setDisable(b);
+        btnSell.setDisable(b);
     }
 
 
+    private String getSearch() {
+        return personNumbField.getText();
+    }
+    private Integer getAmount() {
+        if(NumberValidator.isNumeric(txfAmount.getText())) {
+            return Integer.valueOf(txfAmount.getText());
+        } else {
+            return null;
+        }
+    }
+
+    @FXML
+    private void onBuy() {
+
+    }
+    private void setUserStatusHoldings() {
+        ArrayList<String> res = sqLite.getGetUserStatusHoldings(user);
+        String holdings = "*** CURRENT HOLDINGS ***\n\n";
+        for (String s : res) {
+            holdings += s + "\n------------------------\n";
+        } result.setText(holdings);
+    }
+    @FXML
+    private void onSell() {
+        Integer quantity = getAmount();
+        if(quantity == null || quantity == 0) {
+            setAlert("No amount", "Write a valid amount of stocks you wish to sell");
+            return;
+        }
+        try {
+            sqLite.isAllowedSell(user,quantity, stock.getSymbol(), stock.getPrice());
+            setAlert("Congratulation!", "You sold " + quantity
+                        + " " + stock.getName() + " stocks.\n"
+                        + "Price per stock: " + stock.getPrice());
+            setUserStatusHoldings();
+
+
+        } catch (RuntimeException e) {
+            setAlert("false", getSearch());
+        }
+    }
+
+    @FXML
+    private void onHoldings() {
+    }
+
+    @FXML
+    private void onHistory() {
+    }
+
+    @FXML
+    private void onMarket() {
+        showMarkets();
+    }
+
+    @FXML
+    private void onSearch() {
+        search();
+    }
 }

@@ -10,19 +10,19 @@ public class Stock {
     private String industry;
     private String country;
     private String date;
-    private Double price;
+    private Double  price;
 
 
     @Override
     public String toString() {
         return "Name: " + name
                 + "\nSymbol: " + symbol
-                + "\nDescription: " + description
                 + "\nExchange: " + exchange
                 + "\nSector: " + sector
                 + "\nIndustry: " + industry
                 + "\nCountry: " + country
-                + "\nCurrency: " + currency;
+                + "\nCurrency: " + currency
+                + "\nDescription:\n" + splitDesc(description, 6);
     }
     public String getSymbol() {
         return symbol;
@@ -101,5 +101,17 @@ public class Stock {
 
     public void setDate(String date) {
         this.date = date;
+    }
+    static String splitDesc(String description, int words) {
+        String[] split = description.split("\\s+");
+        StringBuilder res = new StringBuilder();
+        int count = 0;
+        for (String w: split) {
+            res.append(w).append(" ");
+            count ++;
+            if (count % words == 0) {
+                res.append("\n");
+            }
+        } return res.toString();
     }
 }

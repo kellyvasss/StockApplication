@@ -48,4 +48,6 @@ public class StockBuilder {
     public Stock build() {
         return stock;
     }
+
+
 }

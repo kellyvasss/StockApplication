@@ -50,6 +50,7 @@ public class AlphaVantage {
                         .country(jsonNode.get("Country").asText())
                         .sector(jsonNode.get("Sector").asText())
                         .industry(jsonNode.get("Industry").asText())
+                        .price(jsonNode.get("AnalystTargetPrice").asDouble())
                         .build();
                 return stock;
             } else {
