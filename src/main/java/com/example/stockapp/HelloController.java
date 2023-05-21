@@ -284,10 +284,12 @@ public class HelloController {
 
     @FXML
     private void onHoldings() {
+        setUserStatusHoldings();
     }
 
     @FXML
     private void onHistory() {
+        // här vill vi se alla sälj
     }
 
     @FXML

@@ -156,19 +156,12 @@ public class SQLite {
         }
         return succes;
     }
-
-    // lägger till ett köp i in + uppdaterar cash för user
-    static final String insert = "INSERT INTO fact_transaction_in(user_id, stock_id, \n"
-            + "quantity, price, approxValue, date, growth) VALUES(?,?,?,?,?, date('now'),0.0);";
-
-
     public Boolean insertTransaction(User user, Integer quantity, Double price, String symbol) {
         Boolean succes = true;
-        Integer id = security(user); // denna behövs två gånger och därför smartare att utföra den direkt
         try {
             // Första query
             PreparedStatement prepared = conn.prepareStatement(Statements.FactTransaction.insert);
-            prepared.setInt(1, id);
+            prepared.setInt(1, security(user));
             prepared.setInt(2, stock(symbol));
             prepared.setInt(3, quantity);
             prepared.setDouble(4, price);
