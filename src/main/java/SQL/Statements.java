@@ -105,11 +105,12 @@ public final class Statements {
     static final class FactTransaction {
         // Balance är vad man har för värde på sina aktier + belopp som ej använts
         // Förändring i procent räknas ut med formel ((nytt värde - ursprungliga värde) / ursprungliga värde) * 100
+
         static final String getGrowthAndBalance = "SELECT\n" +
-                "IFNULL((((SUM(fin.approxValue) + d.cash) - 100000.0) / 100000.0) * 100, 0) AS p,\n" + // <- om värdet är null (ingen rad finns) ersätts det med 0
-                "IFNULL(IFNULL(SUM(fin.approxValue),0) + d.cash, d.cash) AS b\n" +
+                "IFNULL(ROUND((((SUM(fin.approxValue) + d.cash) - 100000.0) / 100000.0) * 100, 2), 0) AS p,\n" + // <- om värdet är null (ingen rad finns) ersätts det med 0
+                "IFNULL(ROUND(SUM(fin.approxValue) + d.cash, 2), d.cash) AS b\n" +
                 "FROM dim_user d\n" +
-                "LEFT JOIN fact_transaction_in fin ON fin.user_id = d.id\n" +
+                "INNER JOIN fact_transaction_in fin ON fin.user_id = d.id\n" +
                 "WHERE d.id = ?";
 
         static final String getUserStatusHoldings = "SELECT d.name n, d.symbol s, fin.quantity q, "
@@ -117,6 +118,13 @@ public final class Statements {
                 + "FROM fact_transaction_in fin \n"
                 + "JOIN dim_stock d ON fin.stock_id = d.id \n"
                 + "WHERE user_id = ?";
+        // Namn på aktie, Symbol, datum, totala priset och procent för säljet
+        static final String getAllSales = "SELECT d.name AS n, d.symbol AS s,\n"
+                + "fout.date AS d, fout.price * fout.quantity as p, ((fout.price - fin.price)/fin.price) * 100 AS g\n"
+                + "FROM fact_transaction_out fout \n"
+                + "JOIN dim_stock d ON fout.stock_id = d.id \n"
+                + "LEFT JOIN fact_transaction_in fin ON fout.buy_id = fin.id \n"
+                + "WHERE fout.user_id = ?;";
 
 
         static final String create = "CREATE TABLE IF NOT EXISTS fact_transaction_in (\n"
@@ -165,9 +173,9 @@ public final class Statements {
         static final String updateCash = "UPDATE dim_user SET cash = cash - ? WHERE id = ?;"; // uppdatera antal pengar user har att handla för när köp
         static final String updateCashSell = "UPDATE dim_user SET cash = cash + ? WHERE id = ?;"; // uppdatera antal pengar user har att handla för vid sälj
         static final String updateBuy = "UPDATE fact_transaction_in\n"
-                + "SET quantity = quantity + ?, price = (( price * quantity )+( ? * ? ))/( quantity + ? ), approxValue = ?*(?+quantity), \n"
-                + "growth = (? - ((price + ?)/2)) / ((price + ?)/2) \n"
+                + "SET quantity = quantity + ?, price = (( price * quantity )+( ? * ? ))/( quantity + ? ), approxValue = ?*(?+quantity) \n"
                 + "WHERE user_id=? AND stock_id=?;";
+
 
         // uppdaterar köp vid sälj av delar den uppdaterar enbart quantity och
         // approxvalue eftersom vid sälj får man inget nytt getValue(price)
@@ -175,6 +183,7 @@ public final class Statements {
                 + "SET quantity = quantity - ?, approxValue = ?*(quantity-?)\n"
                 + "WHERE user_id = ? AND stock_id = ?;";
         static final String isAllowedSell = "SELECT quantity q FROM fact_transaction_in WHERE user_id = ? AND stock_id = ?";
+        static final String getCashToUse = "SELECT cash FROM dim_user WHERE id = ?";
 
         // visar utveckling i procent för allt
         static final String selectGrowthProcentAll = "SELECT (price - (CAST(approxValue AS REAL) / quantity)) / price AS r\n" +

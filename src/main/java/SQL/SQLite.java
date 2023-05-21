@@ -107,28 +107,40 @@ public class SQLite {
     // uppdatera in tbl sätt nytt antal, pris -> läs i Statementklass för att förstå parametrarna
     // Används när det sker ett köp av en aktie det redan finns i innehavet
     // uppdatera user cash
-    Boolean updateBuy(Integer quantity, Double price, User user, String symbol) {
-        Boolean succes = true;
+    public Boolean isExisting(User user, String symbol) {
+        Boolean existing = false;
         try {
-            // Första query
+            PreparedStatement prepared = conn.prepareStatement("SELECT id FROM fact_transaction_in WHERE user_id=? AND stock_id=?;");
+            prepared.setInt(1, security(user));
+            prepared.setInt(2, stock(symbol));
+            ResultSet rs = prepared.executeQuery();
+            if(rs.next()) {
+                existing = true;
+            }
+        }catch (SQLException e) {
+
+        }return existing;
+    }
+    static final String updateBuy = "UPDATE fact_transaction_in\n"
+            + "SET quantity = quantity + ?, price = (( price * quantity )+( ? * ? ))/( quantity + ? ), approxValue = ?*(?+quantity), \n"
+            + "WHERE user_id=? AND stock_id=?;";
+    public Boolean updateBuy(Integer quantity, Double price, User user, String symbol) {
+        try {
             PreparedStatement prepared = conn.prepareStatement(Statements.FactTransaction.updateBuy);
             prepared.setInt(1, quantity); // <- antal = antal + antal
-            prepared.setInt(2, quantity); // <- nytt antal köpta *
-            prepared.setDouble(3, price); // <- nytt pris/ aktie
+            prepared.setInt(2, quantity); // <- pris * antal
+            prepared.setDouble(3, price);
             prepared.setInt(4, quantity); // <- delat med totala antalet, (antal + antal)
-            prepared.setDouble(5, price); // <- nytt pris
-            prepared.setInt(6, quantity); // <- nytt pris * (antal + antal)
-            prepared.setDouble(7, price); // <- nya priset att subtrahera från (price)
-            prepared.setDouble(8, price); // <- nya priset att dela med två
-            prepared.setDouble(9, price); // <- nya priset att dela med nya-gamla
-            prepared.setInt(10, security(user));
-            prepared.setInt(11, stock(symbol));
+            prepared.setDouble(5, price);
+            prepared.setInt(6, quantity); // <- nytt pris * total antal = approxValue
+            prepared.setInt(7, security(user));
+            prepared.setInt(8, stock(symbol));
             prepared.executeUpdate();
+            System.out.println("efter executeUpdate i updateBuy");
             updateCashBuy(user, quantity, price);
         } catch (SQLException e) {
-            succes = false;
-        }
-        return succes;
+            return false;
+        }return true;
     }
     private void updateCashBuy(User user, Integer quantity, Double price) {
         try {
@@ -156,6 +168,7 @@ public class SQLite {
         }
         return succes;
     }
+
     public Boolean insertTransaction(User user, Integer quantity, Double price, String symbol) {
         Boolean succes = true;
         try {
@@ -353,6 +366,31 @@ public class SQLite {
         } catch (SQLException e) {
         }
     }
+    static final String getAllSales = "SELECT d.name AS n, d.symbol AS s,\n"
+            + "fout.date AS d, fout.price * fout.quantity as p, ((fout.price - fin.price)/fin.price) * 100 AS g\n"
+            + "FROM fact_transaction_out fout \n"
+            + "JOIN dim_stock d ON fout.stock_id = d.id \n"
+            + "JOIN fact_transaction_in fin ON fout.buy_id = fin.id \n"
+            + "WHERE fout.user_id = ?;";
+    public ArrayList<String> getHistory(User user) {
+        ArrayList<String> results = new ArrayList<>();
+        try {
+            PreparedStatement prepared = conn.prepareStatement(Statements.FactTransaction.getAllSales);
+            prepared.setInt(1, security(user));
+            ResultSet rs = prepared.executeQuery();
+            while (rs.next()) {
+                String result = "Name of stock: " + rs.getString("n")
+                        + "\nSymbol: " + rs.getString("s")
+                        + "\nDate of sale: " + rs.getString("d")
+                        + "\nPrice of sale: " + rs.getString("p")
+                        + "\nProcent up/down: " + rs.getString("g") + " %";
+                results.add(result);
+            }
+        } catch (SQLException e) {
+            System.out.println("fel med get History");
+            System.out.println(e.getMessage());
+        } return results;
+    }
 
     // returnerar alla holdings
     public ArrayList<String> getGetUserStatusHoldings(User user) {
@@ -508,41 +546,70 @@ public class SQLite {
     }
     private void updateCashSell(User user, Integer quantity, Double price) {
         try {
+            System.out.println("i try updatecash sell");
             PreparedStatement prepared = conn.prepareStatement(Statements.FactTransaction.updateCashSell);
             prepared.setDouble(1, price*quantity);
             prepared.setInt(2, security(user));
             prepared.executeUpdate();
+            System.out.println("efeter executeUpdate i updatecashsell");
         } catch (SQLException e) {
             System.out.println("fel med updateCashSell " + e.getMessage());
         }
     }
-
+    public Double getCashToUse(User user) {
+        try {
+            PreparedStatement prepared = conn.prepareStatement(Statements.FactTransaction.getCashToUse);
+            prepared.setInt(1, security(user));
+            ResultSet rs = prepared.executeQuery();
+            if(rs.next()) {
+                return rs.getDouble("cash");
+            }
+        } catch (SQLException e) {
+        }return null;
+    }
     // funkar returnerar true om antalet att vilja sälja är mindre eller lika med antal som finns
     public Boolean isAllowedSell(User user, Integer quantity, String symbol, Double price) {
+        System.out.println("inne i IAS");
         try {
             PreparedStatement p = conn.prepareStatement(Statements.FactTransaction.isAllowedSell);
             p.setInt(1, security(user));
             p.setInt(2, stock(symbol));
             ResultSet rs = p.executeQuery();
+            System.out.println(rs.getInt("q"));
             if (rs.next()) { // om det finns quantity i tabellen
+                System.out.println("inne i rs.next() i IAS dvs, rs är next");
                 Integer q = rs.getInt("q");
-                if (q < quantity) {
-                    return false;
+                if (q < quantity || q == null) {
+                    System.out.println("kastat fel IAS användaren försökte sälja mer än vad den har");
+                    throw new RuntimeException();
+
                 }
                 if (q == quantity || q == 0) { // om antalet önskat sälj är lika med antalet som finns eller om antalet är 0
-                    sellAll(user, symbol); // sälj och radera raden
+                    System.out.println("innan insertTransactionOut i isAllowedSell");
                     insertTransactionOut(user, quantity, price, symbol); // lägg till en rad i sälj tabellen
-                    updateCashSell(user, quantity, price); // uppdaterar antal pengar usern har
+
+                    System.out.println("innan sellAll i is AllowedSell");
+                    sellAll(user, symbol); // sälj och radera raden
+
+                    System.out.println("innan updatecash i IAS");
+
+
                 } else if (q > quantity) { // om antalet som finns är mer än önskat sälj
+                    System.out.println("elfe is i IAS");
                     updateBuySub(quantity, price, user, symbol); // uppdatera in tbl till nytt antal och pris
+                    System.out.println("innan insertTransactionOut, efter updateBuySub");
                     insertTransactionOut(user, quantity, price, symbol); // lägg till rad i sälj tabell
-                    updateCashSell(user, quantity, price); // uppdatera cash user har
-                }
+                    System.out.println("innan updateCashSell");
+
+
+                } updateCashSell(user, quantity, price);
+                System.out.println("innan return rs.getInt...");
+                return rs.getInt("q") >= quantity; // om antalet som finns är mer eller lika med än önskat sälj = true
             }
-            return rs.getInt("q") >= quantity; // om antalet som finns är mer eller lika med än önskat sälj = true
         } catch (SQLException e) {
+            System.out.println("Is allowed sell har kastat fel");
             throw new RuntimeException();
-        }
+        } return false;
     }
 
 }

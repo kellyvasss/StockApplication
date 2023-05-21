@@ -191,11 +191,31 @@ public class HelloController {
     private void logIn() {
 
     }
-    private void buy() {
-
+    private Boolean isAllowedBuy() {
+        try {
+            Integer quantity = getAmount();
+            System.out.println("efter getAmount() i isAllowedBuy()");
+            Double cash = sqLite.getCashToUse(user);
+            System.out.println("efter sqlite.getCashToUse() i isAllowedBuy()");
+            return cash > quantity*stock.getPrice();
+        } catch (RuntimeException e) {
+            System.out.println("is allowed buy catch");
+            return false;
+        }
     }
-    private void sell() {
-
+    private void buy() {
+        System.out.println("innan getAmount() i buy()");
+        Integer quantity = getAmount();
+        System.out.println("innan stock.getPrice i buy()");
+        Double price = stock.getPrice();
+        System.out.println("innan stock.getSymbol i buy()");
+        String symbol = stock.getSymbol();
+        if(sqLite.isExisting(user,symbol)) {
+            sqLite.updateBuy(quantity, price, user, symbol);
+        } else {
+            sqLite.insertTransaction(user,quantity,price,symbol);
+        }
+        updateUserStatus();
     }
     private void seeStatus() {
 
@@ -245,16 +265,17 @@ public class HelloController {
     }
     private Integer getAmount() {
         if(NumberValidator.isNumeric(txfAmount.getText())) {
+            System.out.println(txfAmount.getText());
+            System.out.println("if sats i getAmount()");
             return Integer.valueOf(txfAmount.getText());
         } else {
-            return null;
+            setAlert("No amount", "Write a valid amount of stocks you wish to sell");
+            System.out.println("else sats i getAmount()");
+            throw new RuntimeException();
         }
     }
 
-    @FXML
-    private void onBuy() {
 
-    }
     private void setUserStatusHoldings() {
         ArrayList<String> res = sqLite.getGetUserStatusHoldings(user);
         String holdings = "*** CURRENT HOLDINGS ***\n\n";
@@ -264,37 +285,53 @@ public class HelloController {
     }
     @FXML
     private void onSell() {
-        Integer quantity = getAmount();
-        if(quantity == null || quantity == 0) {
-            setAlert("No amount", "Write a valid amount of stocks you wish to sell");
-            return;
-        }
         try {
+            Integer quantity = getAmount();
+            System.out.println("efter get amount");
             sqLite.isAllowedSell(user,quantity, stock.getSymbol(), stock.getPrice());
+            System.out.println("efter isAllowedSell");
             setAlert("Congratulation!", "You sold " + quantity
                         + " " + stock.getName() + " stocks.\n"
                         + "Price per stock: " + stock.getPrice());
+            System.out.println("efter set alert concratz");
             setUserStatusHoldings();
+            System.out.println("efter setuserstatus holding");
+            updateUserStatus();
 
 
         } catch (RuntimeException e) {
             setAlert("false", getSearch());
         }
     }
-
+    @FXML
+    private void onBuy() {
+        if (isAllowedBuy()) {
+            System.out.println("onBuy, isAllowedBuy blev true");
+            buy();
+            updateUserStatus();
+        } else System.out.println("onBuy else");
+    }
     @FXML
     private void onHoldings() {
         setUserStatusHoldings();
+        activateBuySell(true);
     }
 
     @FXML
     private void onHistory() {
         // här vill vi se alla sälj
+        activateBuySell(true);
+        ArrayList<String> history = sqLite.getHistory(user);
+        String res = "*** SOLD STOCKS ***\n\n";
+        for (String s: history) {
+            res += s + "\n------------------------\n";
+        } result.setText(res);
     }
 
     @FXML
     private void onMarket() {
         showMarkets();
+        activateBuySell(true);
     }
 
     @FXML
