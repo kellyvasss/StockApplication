@@ -20,10 +20,17 @@ import user.User;
 import user.hash;
 
 import java.sql.SQLException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Optional;
 
 public class HelloController {
+    @FXML
+    private RadioButton btnUSD;
+    @FXML
+    private RadioButton btnSEK;
+    @FXML
+    private RadioButton btnEUR;
     @FXML
     private TextArea result;
     @FXML
@@ -62,6 +69,8 @@ public class HelloController {
     private int attempts = 0; // Tre försök att skriva in rätt lösenord
     private TextInputDialog textInputDialog;
     private Alert alert;
+    private DecimalFormat decimalFormat;
+
 
 
     public HelloController() {
@@ -70,8 +79,10 @@ public class HelloController {
         sqLite = new SQLite("m");
         textInputDialog = new TextInputDialog();
         alert = new Alert(Alert.AlertType.INFORMATION);
+        decimalFormat = new DecimalFormat("#.##");
 
     }
+
     private void setAlert(String title, String content) {
         alert.setTitle(title);
         alert.setHeaderText(null);
@@ -155,6 +166,9 @@ public class HelloController {
         lblPersNumb.setText("SEARCH");
         result.setVisible(true);
         result1.setVisible(true);
+        btnEUR.setVisible(true);
+        btnSEK.setVisible(true);
+        btnUSD.setVisible(true);
     }
 
     private void checkPassword(String password) {
@@ -338,4 +352,30 @@ public class HelloController {
     private void onSearch() {
         search();
     }
+
+    private Double convert(String currency) {
+        Double amount = sqLite.getBalanceAndGrowth(user)[1];
+        return alphaVantage.currencyConverter(currency) * amount;
+    }
+    @FXML
+    protected void btnUSD(ActionEvent event) {
+        btnEUR.setSelected(false);
+        btnSEK.setSelected(false);
+        balance.setText(sqLite.getBalanceAndGrowth(user)[1].toString());
+    }
+
+    @FXML
+    protected void btnEUR() {
+        btnUSD.setSelected(false);
+        btnSEK.setSelected(false);
+        balance.setText(decimalFormat.format(convert("EUR")));
+    }
+
+    @FXML
+    protected void btnSEK() {
+        btnEUR.setSelected(false);
+        btnUSD.setSelected(false);
+        balance.setText(decimalFormat.format(convert("SEK")));
+    }
+
 }

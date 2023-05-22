@@ -106,17 +106,19 @@ public final class Statements {
         // Balance är vad man har för värde på sina aktier + belopp som ej använts
         // Förändring i procent räknas ut med formel ((nytt värde - ursprungliga värde) / ursprungliga värde) * 100
 
+        // Flytta denna till dim user
         static final String getGrowthAndBalance = "SELECT\n" +
                 "IFNULL(ROUND((((SUM(fin.approxValue) + d.cash) - 100000.0) / 100000.0) * 100, 2), 0) AS p,\n" + // <- om värdet är null (ingen rad finns) ersätts det med 0
-                "IFNULL(ROUND(SUM(fin.approxValue) + d.cash, 2), d.cash) AS b\n" +
+                "IFNULL(ROUND(SUM(IFNULL(fin.approxValue, 0)) + d.cash, 2), d.cash) AS b\n" + // <- Avrunda till max 2 decimaler
                 "FROM dim_user d\n" +
-                "INNER JOIN fact_transaction_in fin ON fin.user_id = d.id\n" +
-                "WHERE d.id = ?";
+                "LEFT JOIN fact_transaction_in fin ON fin.user_id = d.id\n" + // <- enbart matchande rader
+                "WHERE d.id = ?"; // bara för EN user
 
-        static final String getUserStatusHoldings = "SELECT d.name n, d.symbol s, fin.quantity q, "
-                + "fin.price p, (((fin.approxValue/fin.quantity) - fin.price) / fin.price) * 100 AS g \n" // ((nytt värde - gammaltvärde) / gammaltvärde) *100
+        static final String getUserStatusHoldings = "SELECT d.name n, d.symbol s, fin.quantity q, m.name AS m, \n"
+                + "fin.price p, ROUND((((fin.approxValue/fin.quantity) - fin.price) / fin.price) * 100, 2) AS g \n" // ((nytt värde - gammaltvärde) / gammaltvärde) *100
                 + "FROM fact_transaction_in fin \n"
                 + "JOIN dim_stock d ON fin.stock_id = d.id \n"
+                + "JOIN dim_market m ON d.market_id = m.id \n"
                 + "WHERE user_id = ?";
         // Namn på aktie, Symbol, datum, totala priset och procent för säljet
         static final String getAllSales = "SELECT d.name AS n, d.symbol AS s,\n"
@@ -135,13 +137,12 @@ public final class Statements {
                 + "quantity INTEGER NOT NULL,\n"
                 + "price DECIMAL NOT NULL,\n" // anskaffningsvärdet(getValue)
                 + "approxValue DECIMAL,\n"// pris försäljning
-                + "growth DECIMAL NOT NULL,"
                 + "FOREIGN KEY (user_id) REFERENCES dim_user(id),\n"
                 + "FOREIGN KEY (stock_id) REFERENCES dim_stock(id),\n"
                 + "UNIQUE(user_id, stock_id)"
                 + ");";
         static final String insert = "INSERT INTO fact_transaction_in(user_id, stock_id, \n"
-                + "quantity, price, approxValue, date, growth) VALUES(?,?,?,?,?, date('now'),0.0);";
+                + "quantity, price, approxValue, date) VALUES(?,?,?,?,?, date('now'));";
 
         // inget value ska vara unikt här eftersom alla sälj är unika
         static final String createSell = "CREATE TABLE IF NOT EXISTS fact_transaction_out (\n"

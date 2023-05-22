@@ -13,7 +13,9 @@ public class test {
 
         keyReader = new KeyReader("Alpha");
         alphaVantage = new AlphaVantage(keyReader.getAPIKey());
+        System.out.println(alphaVantage.currencyConverter("SEK"));
 
+        /*
 
 
        // System.out.println(alphaVantage.companyOverview("BA").getName());
@@ -40,7 +42,7 @@ public class test {
         Double[] b = sqLite.getBalanceAndGrowth(test);
         System.out.println(b[0] + " %");
         System.out.println(b[1]);
-        Stock stock = alphaVantage.companyOverview("AAPL");
+        Stock stock = alphaVantage.companyOverview("AAPL");*/
        // ArrayList<Stock> a = alphaVantage.timeSeriesDailyAdjusted("AAPL");
        // sqLite.insertCurrency(stock);
        // sqLite.insertDimStock(stock);

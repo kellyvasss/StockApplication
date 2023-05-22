@@ -226,11 +226,11 @@ public class AlphaVantage {
     // Returnerar priset att * med USD
     // 1 jpy = 0,00730674 USD
     // 100 * 0,00730674 = 0,730674 USD
-    public Double currencyConverter(String fromCurrency) {
+    public Double currencyConverter(String toCurrency) {
         String function = "CURRENCY_EXCHANGE_RATE";
         String url = base_url + function
-                + "&from_currency=" + fromCurrency
-                + "&to_currency=USD"
+                + "&from_currency=USD"
+                + "&to_currency=" + toCurrency
                 + "&apikey=" + key;
         Request request = new Request.Builder()
                 .url(url)

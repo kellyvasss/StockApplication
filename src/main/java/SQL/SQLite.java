@@ -404,6 +404,7 @@ public class SQLite {
                         + "\nSymbol: " + rs.getString("s")
                         + "\nQuantity: " + rs.getString("q")
                         + "\nBuy Price: " + rs.getString("p")
+                        + "\nMarket: " + rs.getString("m")
                         + "\nGrowth: " + rs.getString("g") + " %";
 
                 results.add(result);

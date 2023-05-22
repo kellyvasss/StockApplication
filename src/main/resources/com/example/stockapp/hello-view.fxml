@@ -11,18 +11,25 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.TextField?>
-<VBox alignment="CENTER" spacing="20.0" xmlns:fx="http://javafx.com/fxml" style="-fx-background-color: #000000;"
+<?import javafx.scene.control.RadioButton?>
+
+<?import javafx.scene.control.ToggleGroup?>
+<VBox alignment="TOP_LEFT" spacing="20.0" xmlns:fx="http://javafx.com/fxml" style="-fx-background-color: #000000;"
       fx:controller="com.example.stockapp.HelloController">
+
   <padding>
     <Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/>
   </padding>
+
+
+
   <HBox alignment="TOP_CENTER" spacing="300" >
+
     <Label fx:id="balance" scaleY="5" scaleX="5" visible="false"/>
     <Label fx:id="growth" scaleY="5" scaleX="5" visible="false"/>
     <HBox alignment="CENTER_RIGHT" >
       <Button text="Log out" onAction="#onLogOut" AnchorPane.topAnchor="0" AnchorPane.rightAnchor="0" />
     </HBox>
-
   </HBox>
   <AnchorPane fx:id="status" visible="false">
     <children>
@@ -33,6 +40,23 @@
         <Button fx:id="btnShowHistory" text="History" onAction="#onHistory"/>
         <Button fx:id="btnMarket" text="Exchange hours" onAction="#onMarket"/>
         <Button fx:id="btnSearch" text="Search" onAction="#onSearch" />
+        <HBox alignment="TOP_LEFT" spacing="100" >
+          <RadioButton text="USD" fx:id="btnUSD" onAction="#btnUSD" >
+            <toggleGroup>
+              <ToggleGroup fx:id="togg"/>
+            </toggleGroup>
+          </RadioButton>
+          <RadioButton text="EUR" fx:id="btnEUR" onAction="#btnEUR" >
+            <toggleGroup>
+              <ToggleGroup fx:id="toggg"/>
+            </toggleGroup>
+          </RadioButton>
+          <RadioButton text="SEK" onAction="#btnSEK" fx:id="btnSEK"  >
+            <toggleGroup>
+              <ToggleGroup fx:id="togggg" />
+            </toggleGroup>
+          </RadioButton>
+        </HBox>
       </HBox>
 
   </children>
@@ -43,6 +67,7 @@
     <Label text="Password: " fx:id="lblPassword" />
     <PasswordField fx:id="passwordField" />
     <Button text="Log in" onAction="#onLoginButtonClick" fx:id="btnLogIn"/>
+
     <HBox fx:id="amountBox" alignment="CENTER_RIGHT" >
       <Label text="Amount" fx:id="lblAmount" />
     </HBox>
@@ -50,8 +75,8 @@
   </VBox>
 
   <HBox spacing="20.0">
-    <TextArea fx:id="result" visible="false" editable="false" prefWidth="400" maxWidth="400" style="-fx-font-weight: bold;"/>
-    <TextArea fx:id="result1" visible="false" editable="false" prefWidth="400" maxWidth="400" style="-fx-font-weight: bold;"/>
+    <TextArea fx:id="result" visible="false" editable="false" prefWidth="400" maxWidth="400" prefHeight="450" maxHeight="450" style="-fx-font-weight: bold;"/>
+    <TextArea fx:id="result1" visible="false" editable="false" prefWidth="400" maxWidth="400" prefHeight="450" maxHeight="450" style="-fx-font-weight: bold;"/>
     <TextField fx:id="txfAmount" visible="true" editable="true"/>
   </HBox>
 
