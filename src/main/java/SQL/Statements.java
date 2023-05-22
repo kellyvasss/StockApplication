@@ -1,23 +1,10 @@
 package SQL;
 
 public final class Statements {
-    static final class FactStock {
-        static final String insertFactStock = "INSERT INTO fact_StockPrice(stock_id, date, price, currency_id) "
-                + "VALUES(?,?,?,?)";
-        static final String create = "CREATE TABLE IF NOT EXISTS fact_StockPrice (\n"
-                + "id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
-                + "stock_id INTEGER NOT NULL,\n"
-                + "date DATE NOT NULL,\n"
-                + "price DECIMAL,\n"
-                + "currency_id INTEGER NOT NULL,\n"
-                + "FOREIGN KEY (stock_id) REFERENCES dim_stock(id),\n"
-                + "FOREIGN KEY (currency_id) REFERENCES dim_currency(id)"
-                + "UNIQUE(stock_id, date));";
-    }
 
     static final class DimStock {
         static final String insertDimStock = "INSERT INTO dim_stock(symbol,name,description,"
-                + "market_id,country_id,sector_id,industry_id) "
+                + "market_id,country_id,sector_id,currency_id) "
                 + "VALUES(?,?,?,?,?,?,?)";
         static final String selectID = "SELECT id FROM dim_stock WHERE symbol=?";
         static final String count = "SELECT COUNT(*) id FROM dim_stock;";
@@ -29,21 +16,11 @@ public final class Statements {
                 + "market_id INTEGER,\n"
                 + "country_id INTEGER,\n"
                 + "sector_id INTEGER,\n"
-                + "industry_id INTEGER,\n"
+                + "currency_id INTEGER,\n"
                 + "FOREIGN KEY (market_id) REFERENCES dim_market(id),\n"
                 + "FOREIGN KEY (country_id) REFERENCES dim_country(id),\n"
                 + "FOREIGN KEY (sector_id) REFERENCES dim_sector(id),\n"
-                + "FOREIGN KEY (industry_id) REFERENCES dim_industry(id));";
-    }
-
-    static class DimIndustry {
-        static final String count = "SELECT COUNT(*) id FROM dim_industry;";
-        static final String insert = "INSERT INTO dim_industry(name) VALUES(?)";
-        static final String selectID = "SELECT id FROM dim_industry WHERE name=?";
-        static final String create = "CREATE TABLE IF NOT EXISTS dim_industry (\n"
-                + "id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
-                + "name VARCHAR(50) UNIQUE);";
-
+                + "FOREIGN KEY (currency_id) REFERENCES dim_currency(id));";
     }
 
     static final class DimCurrency {
@@ -120,12 +97,13 @@ public final class Statements {
                 + "JOIN dim_stock d ON fin.stock_id = d.id \n"
                 + "JOIN dim_market m ON d.market_id = m.id \n"
                 + "WHERE user_id = ?";
-        // Namn på aktie, Symbol, datum, totala priset och procent för säljet
+
         static final String getAllSales = "SELECT d.name AS n, d.symbol AS s,\n"
-                + "fout.date AS d, fout.price * fout.quantity as p, ((fout.price - fin.price)/fin.price) * 100 AS g\n"
+                + "fout.date AS d, \n"
+                + "((fout.price - fout.getPrice)/ fout.getPrice)*100 AS g\n"
                 + "FROM fact_transaction_out fout \n"
                 + "JOIN dim_stock d ON fout.stock_id = d.id \n"
-                + "LEFT JOIN fact_transaction_in fin ON fout.buy_id = fin.id \n"
+                + "JOIN fact_transaction_in fin ON fout.buy_id = fin.id \n"
                 + "WHERE fout.user_id = ?;";
 
 
@@ -153,17 +131,18 @@ public final class Statements {
                 + "date DATE NOT NULL,\n"
                 + "quantity INTEGER NOT NULL,\n"
                 + "price DECIMAL NOT NULL,\n"
+                + "getPrice DECIMAL NOT NULL,\n"
                 + "FOREIGN KEY (user_id) REFERENCES dim_user(id),\n"
                 + "FOREIGN KEY (stock_id) REFERENCES dim_stock(id),\n"
                 + "FOREIGN KEY (buy_id) REFERENCES fact_transaction_in(id));";
         // lägg till en rad i out(sälj)
         static final String insertSell = "INSERT INTO fact_transaction_out(user_id, stock_id, \n"
-                + "buy_id, quantity, price, date) VALUES(?,?,?,?,?,date('now'));";
+                + "buy_id, quantity, price, getPrice, date) VALUES(?,?,?,?,?,?,date('now'));";
 
         // vid sälj av alla aktier
         static final String sellAllStocks = "DELETE FROM fact_transaction_in WHERE user_id = ? AND stock_id = ?;";
         // när man vill veta vilket köp säljet tillhör
-        static final String getBuyID = "SELECT id FROM fact_transaction_in WHERE user_id=? AND stock_id=?";
+        static final String getBuyID = "SELECT id, price FROM fact_transaction_in WHERE user_id=? AND stock_id=?";
 
         // approxValue = försäljningspris per aktie (eller det senaste hämtade värdet) * antal holdings
         // getValue ska bara uppdateras vid köp INTE sälj -> denna ger nya anskaffningspris/aktie

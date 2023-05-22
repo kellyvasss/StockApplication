@@ -21,70 +21,6 @@ public class SQLite {
         create();
     }
 
-    private void tryStatement(String sql) { // används vid alla createTable statements
-        try {
-            Statement statement = conn.createStatement();
-            statement.execute(sql);
-            statement.close();
-        } catch (SQLException e) {
-            System.out.println(e.getMessage() + e.getErrorCode() + e.getSQLState());
-
-        }
-    }
-
-    // sköter skapandet av tabeller
-    void create() {
-        createTableUser();
-        createTableCountry();
-        createTableDimCurrency();
-        createTableDimIndustry();
-        createTableDimMarket();
-        createTableDimSector();
-        createTableDimStock();
-        createTableFactStockPrice();
-        createTableFactTransactionIn();
-        createTableFactTransactionOut();
-    }
-
-    void createTableUser() {
-        tryStatement(Statements.DimUser.create);
-    }
-
-    void createTableDimStock() {
-        tryStatement(Statements.DimStock.create);
-    }
-
-    void createTableFactTransactionIn() {
-        tryStatement(Statements.FactTransaction.create);
-    }
-
-    void createTableFactTransactionOut() {
-        tryStatement(Statements.FactTransaction.createSell);
-    }
-
-    void createTableDimCurrency() {
-        tryStatement(Statements.DimCurrency.create);
-    }
-
-    void createTableFactStockPrice() {
-        tryStatement(Statements.FactStock.create);
-    }
-
-    void createTableDimSector() {
-        tryStatement(Statements.DimSector.create);
-    }
-
-    void createTableCountry() {
-        tryStatement(Statements.DimCountry.create);
-    }
-
-    void createTableDimIndustry() {
-        tryStatement(Statements.DimIndustry.create);
-    }
-
-    void createTableDimMarket() {
-        tryStatement(Statements.DimMarket.create);
-    }
 
     // uppdaterar rad i köp när sälj
     Boolean updateBuySub(Integer quantity, Double price, User user, String symbol) {
@@ -105,7 +41,7 @@ public class SQLite {
     }
 
     // uppdatera in tbl sätt nytt antal, pris -> läs i Statementklass för att förstå parametrarna
-    // Används när det sker ett köp av en aktie det redan finns i innehavet
+    // Används för att kontrollera om det finns ett existerande köp
     // uppdatera user cash
     public Boolean isExisting(User user, String symbol) {
         Boolean existing = false;
@@ -121,9 +57,6 @@ public class SQLite {
 
         }return existing;
     }
-    static final String updateBuy = "UPDATE fact_transaction_in\n"
-            + "SET quantity = quantity + ?, price = (( price * quantity )+( ? * ? ))/( quantity + ? ), approxValue = ?*(?+quantity), \n"
-            + "WHERE user_id=? AND stock_id=?;";
     public Boolean updateBuy(Integer quantity, Double price, User user, String symbol) {
         try {
             PreparedStatement prepared = conn.prepareStatement(Statements.FactTransaction.updateBuy);
@@ -172,7 +105,6 @@ public class SQLite {
     public Boolean insertTransaction(User user, Integer quantity, Double price, String symbol) {
         Boolean succes = true;
         try {
-            // Första query
             PreparedStatement prepared = conn.prepareStatement(Statements.FactTransaction.insert);
             prepared.setInt(1, security(user));
             prepared.setInt(2, stock(symbol));
@@ -190,7 +122,9 @@ public class SQLite {
     // lägger till ett sälj i out + uppdaterar dim_user cash
     public Boolean insertTransactionOut(User user, Integer quantity, Double price, String symbol) {
         Boolean succes = true;
-        Integer buy_id = getBuyID(user, symbol);
+        Object[] values = getBuyID(user,symbol);
+        Integer buy_id = (Integer) values[0]; // <- Buy_ID från köpet
+        Double buyPrice = (Double) values[1]; // <- GetValue från köpet
         try {
             PreparedStatement prepared = conn.prepareStatement(Statements.FactTransaction.insertSell);
             prepared.setInt(1, security(user));
@@ -198,6 +132,7 @@ public class SQLite {
             prepared.setInt(3, buy_id);
             prepared.setInt(4, quantity);
             prepared.setDouble(5, price);
+            prepared.setDouble(6,buyPrice);
             prepared.executeUpdate();
             updateCashSell(user, quantity, price);
         } catch (SQLException e) {
@@ -209,46 +144,24 @@ public class SQLite {
 
     // funkar
     public void insertDimStock(Stock stock) {
-        Integer market = insertMarket(stock);
-        Integer country = insertCountry(stock);
-        Integer sector = insertSector(stock);
-        Integer industry = insertIndustry(stock);
-        String sql = Statements.DimStock.insertDimStock;
         try {
-            PreparedStatement prepared = conn.prepareStatement(sql);
+            PreparedStatement prepared = conn.prepareStatement(Statements.DimStock.insertDimStock);
             prepared.setString(1, stock.getSymbol());
             prepared.setString(2, stock.getName());
             prepared.setString(3, stock.getDescription());
-            prepared.setInt(4, market);
-            prepared.setInt(5, country);
-            prepared.setInt(6, sector);
-            prepared.setInt(7, industry);
+            prepared.setInt(4, insertMarket(stock));
+            prepared.setInt(5, insertCountry(stock));
+            prepared.setInt(6, insertSector(stock));
+            prepared.setInt(7, currency(stock));
             prepared.executeUpdate();
             prepared.close();
         } catch (SQLException e) {
         }
     }
 
-    // funkar
-    public void insertFactStock(Stock s) {
-        //Integer stock = stock(s);
-        //Integer currency = currency(s);
-        try {
-            PreparedStatement p = conn.prepareStatement(Statements.FactStock.insertFactStock);
-            p.setInt(1, stock(s));
-            p.setString(2, s.getDate());
-            p.setDouble(3, s.getPrice());
-            p.setInt(4, currency(s));
-            p.executeUpdate();
-            p.close();
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-            System.out.println("fel med insert Fact Stock");
-        }
-    }
 
     // lägger till market i dim_market
-    void insertMarket(Market market) {
+    public void insertMarket(Market market) {
         String insertMarket = "INSERT INTO dim_market (name, open, close, note) VALUES(?,?,?,?)";
         try {
             PreparedStatement p = conn.prepareStatement(insertMarket);
@@ -263,7 +176,7 @@ public class SQLite {
     }
 
     // funkar
-    Integer insertMarket(Stock stock) {
+    private Integer insertMarket(Stock stock) {
         try {
             PreparedStatement selectStatement = conn.prepareStatement(Statements.DimMarket.selectID);
             selectStatement.setString(1, stock.getExchange());
@@ -334,31 +247,7 @@ public class SQLite {
         return null;
     }
 
-    // funkar
-    Integer insertIndustry(Stock stock) {
-        try {
-            PreparedStatement selectStatement = conn.prepareStatement(Statements.DimIndustry.selectID);
-            selectStatement.setString(1, stock.getIndustry());
-            ResultSet rs = selectStatement.executeQuery();
-            if (rs.next()) {
-                return rs.getInt("id");
-            } else {
-                PreparedStatement insertStatement = conn.prepareStatement(Statements.DimIndustry.insert);
-                insertStatement.setString(1, stock.getIndustry());
-                insertStatement.executeUpdate();
-                PreparedStatement selectCountStatement = conn.prepareStatement(Statements.DimIndustry.count);
-                ResultSet countRs = selectCountStatement.executeQuery();
-                if (countRs.next()) {
-                    return countRs.getInt("id");
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    void insertCurrency(Stock stock) {
+    private void insertCurrency(Stock stock) {
         try {
             PreparedStatement p = conn.prepareStatement(Statements.DimCurrency.insert);
             p.setString(1, stock.getCurrency());
@@ -366,12 +255,7 @@ public class SQLite {
         } catch (SQLException e) {
         }
     }
-    static final String getAllSales = "SELECT d.name AS n, d.symbol AS s,\n"
-            + "fout.date AS d, fout.price * fout.quantity as p, ((fout.price - fin.price)/fin.price) * 100 AS g\n"
-            + "FROM fact_transaction_out fout \n"
-            + "JOIN dim_stock d ON fout.stock_id = d.id \n"
-            + "JOIN fact_transaction_in fin ON fout.buy_id = fin.id \n"
-            + "WHERE fout.user_id = ?;";
+    // returnerar historia på alla sales för en user
     public ArrayList<String> getHistory(User user) {
         ArrayList<String> results = new ArrayList<>();
         try {
@@ -379,8 +263,8 @@ public class SQLite {
             prepared.setInt(1, security(user));
             ResultSet rs = prepared.executeQuery();
             while (rs.next()) {
-                String result = "Name of stock: " + rs.getString("n")
-                        + "\nSymbol: " + rs.getString("s")
+                String result = "Name of stock: " + rs.getString("n") //
+                        + "\nSymbol: " + rs.getString("s") //
                         + "\nDate of sale: " + rs.getString("d")
                         + "\nPrice of sale: " + rs.getString("p")
                         + "\nProcent up/down: " + rs.getString("g") + " %";
@@ -421,8 +305,8 @@ public class SQLite {
             prepared.setInt(1, security(user));
             ResultSet rs = prepared.executeQuery();
             if(rs.next()) {
-                balanceAndGrowth[0] = rs.getDouble("p");
-                balanceAndGrowth[1] = rs.getDouble("b");
+                balanceAndGrowth[0] = rs.getDouble("p"); // <- procentuell förändring
+                balanceAndGrowth[1] = rs.getDouble("b"); // <- balans
             } return balanceAndGrowth;
         } catch (SQLException e) {
             System.out.println("fel med att hämta balance and growth " + e.getMessage());
@@ -461,39 +345,20 @@ public class SQLite {
         } throw new RuntimeException();
     }
 
-
-    // få ett id på vilket köp det är från in tbl
-    public Integer getBuyID(User user, String symbol) {
+    // få ett id på vilket köp det är från in tbl och getValue
+    public Object[] getBuyID(User user, String symbol) {
+        Object[] values = new Integer[2];
         try {
             PreparedStatement prepared = conn.prepareStatement(Statements.FactTransaction.getBuyID);
             prepared.setInt(1, security(user));
             prepared.setInt(2, stock(symbol));
             ResultSet rs = prepared.executeQuery();
             if (rs.next()) {
-                return rs.getInt("id");
+                values[0] = rs.getInt("id");
+                values[1] = rs.getDouble("price");
+                return values;
             }
         } catch (SQLException e) {
-        }
-        return null;
-    }
-
-    public Integer stock(Stock stock) {
-        try {
-            PreparedStatement p = conn.prepareStatement(Statements.DimStock.selectID);
-            p.setString(1, stock.getSymbol());
-            ResultSet rs = p.executeQuery();
-            if (rs.next()) {
-                return rs.getInt("id");
-            } else {
-                insertDimStock(stock);
-                PreparedStatement ps = conn.prepareStatement(Statements.DimStock.count);
-                ResultSet r = ps.executeQuery();
-                if (r.next()) {
-                    return r.getInt("id");
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
         return null;
     }
@@ -536,7 +401,7 @@ public class SQLite {
     }
 
     // raderar rad från in
-    void sellAll(User user, String symbol) {
+    private void sellAll(User user, String symbol) {
         try {
             PreparedStatement p = conn.prepareStatement(Statements.FactTransaction.sellAllStocks);
             p.setInt(1, security(user));
@@ -549,7 +414,7 @@ public class SQLite {
         try {
             System.out.println("i try updatecash sell");
             PreparedStatement prepared = conn.prepareStatement(Statements.FactTransaction.updateCashSell);
-            prepared.setDouble(1, price*quantity);
+            prepared.setDouble(1, price*quantity); // addera (säljpris * antal) till cash
             prepared.setInt(2, security(user));
             prepared.executeUpdate();
             System.out.println("efeter executeUpdate i updatecashsell");
@@ -581,19 +446,11 @@ public class SQLite {
                 System.out.println("inne i rs.next() i IAS dvs, rs är next");
                 Integer q = rs.getInt("q");
                 if (q < quantity || q == null) {
-                    System.out.println("kastat fel IAS användaren försökte sälja mer än vad den har");
-                    throw new RuntimeException();
-
+                    throw new RuntimeException(); // om användaren försöker att sälja mer aktier än dens innehav
                 }
-                if (q == quantity || q == 0) { // om antalet önskat sälj är lika med antalet som finns eller om antalet är 0
-                    System.out.println("innan insertTransactionOut i isAllowedSell");
+                if (q == quantity) { // om antalet önskat sälj är lika med antalet som finns
                     insertTransactionOut(user, quantity, price, symbol); // lägg till en rad i sälj tabellen
-
-                    System.out.println("innan sellAll i is AllowedSell");
                     sellAll(user, symbol); // sälj och radera raden
-
-                    System.out.println("innan updatecash i IAS");
-
 
                 } else if (q > quantity) { // om antalet som finns är mer än önskat sälj
                     System.out.println("elfe is i IAS");
@@ -602,16 +459,69 @@ public class SQLite {
                     insertTransactionOut(user, quantity, price, symbol); // lägg till rad i sälj tabell
                     System.out.println("innan updateCashSell");
 
-
                 } updateCashSell(user, quantity, price);
                 System.out.println("innan return rs.getInt...");
-                return rs.getInt("q") >= quantity; // om antalet som finns är mer eller lika med än önskat sälj = true
+                return q >= quantity; // om antalet som finns är mer eller lika med än önskat sälj = true
             }
         } catch (SQLException e) {
-            System.out.println("Is allowed sell har kastat fel");
             throw new RuntimeException();
         } return false;
     }
+    private void tryStatement(String sql) { // används vid alla createTable statements
+        try {
+            Statement statement = conn.createStatement();
+            statement.execute(sql);
+            statement.close();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage() + e.getErrorCode() + e.getSQLState());
+
+        }
+    }
+
+    // sköter skapandet av tabeller
+    private void create() {
+        createTableUser();
+        createTableCountry();
+        createTableDimCurrency();
+        createTableDimMarket();
+        createTableDimSector();
+        createTableDimStock();
+        createTableFactTransactionIn();
+        createTableFactTransactionOut();
+    }
+
+    void createTableUser() {
+        tryStatement(Statements.DimUser.create);
+    }
+
+    void createTableDimStock() {
+        tryStatement(Statements.DimStock.create);
+    }
+
+    void createTableFactTransactionIn() {
+        tryStatement(Statements.FactTransaction.create);
+    }
+
+    void createTableFactTransactionOut() {
+        tryStatement(Statements.FactTransaction.createSell);
+    }
+
+    void createTableDimCurrency() {
+        tryStatement(Statements.DimCurrency.create);
+    }
+
+    void createTableDimSector() {
+        tryStatement(Statements.DimSector.create);
+    }
+
+    void createTableCountry() {
+        tryStatement(Statements.DimCountry.create);
+    }
+
+    void createTableDimMarket() {
+        tryStatement(Statements.DimMarket.create);
+    }
+
 
 }
 

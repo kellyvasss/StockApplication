@@ -76,7 +76,7 @@ public class HelloController {
     public HelloController() {
         keyReader = new KeyReader("Alpha");
         alphaVantage = new AlphaVantage(keyReader.getAPIKey());
-        sqLite = new SQLite("m");
+        sqLite = new SQLite("mm");
         textInputDialog = new TextInputDialog();
         alert = new Alert(Alert.AlertType.INFORMATION);
         decimalFormat = new DecimalFormat("#.##");
@@ -234,7 +234,7 @@ public class HelloController {
     private void seeStatus() {
 
     }
-    // byt ut så att man ej söker i fönstret där resultat visas
+
     private void search() {
         String search = getSearch();
         if (search.isEmpty()) {
@@ -250,23 +250,23 @@ public class HelloController {
             addStock();
             activateBuySell(false);
         } catch (NullPointerException e) {
-            result.setText(alphaVantage.searchEndpoint(search));
-            if (result.getText().isEmpty()) {
-                result.setText("No stock matching the search " + search);
-            }
+            searchSecond();
         }
 
     }
-    private void addStock() {
-        String symbol = stock.getSymbol();
-        sqLite.insertDimStock(stock);
-        ArrayList<Stock> stocks = alphaVantage.timeSeriesDailyAdjusted(symbol);
-        for (Stock s: stocks) {
-            s.setCurrency(stock.getCurrency());
-            s.setCountry(stock.getCountry());
-            s.setSymbol(symbol);
-            sqLite.insertFactStock(s);
+    private void searchSecond() {
+        String search = getSearch();
+        try {
+            result.setText(alphaVantage.searchEndpoint(search));
+            if(result.getText().isEmpty()) {
+                result.setText("No stock matching the search " + search);
+            }
+        } catch (NullPointerException e) {
+            setAlert("MAX USE", "You have a limit of 5 searches per minute.");
         }
+    }
+    private void addStock() {
+        sqLite.insertDimStock(stock);
     }
     private void activateBuySell(Boolean b) {
         btnBuy.setDisable(b);
@@ -278,15 +278,13 @@ public class HelloController {
         return personNumbField.getText();
     }
     private Integer getAmount() {
-        if(NumberValidator.isNumeric(txfAmount.getText())) {
-            System.out.println(txfAmount.getText());
-            System.out.println("if sats i getAmount()");
-            return Integer.valueOf(txfAmount.getText());
-        } else {
-            setAlert("No amount", "Write a valid amount of stocks you wish to sell");
-            System.out.println("else sats i getAmount()");
-            throw new RuntimeException();
-        }
+        try {
+            Integer amount = Integer.valueOf(txfAmount.getText());
+            if (amount > 0) {
+                return amount;
+            }
+        } catch (NumberFormatException e) {
+        }throw new RuntimeException();
     }
 
 
