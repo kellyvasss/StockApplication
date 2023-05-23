@@ -33,10 +33,7 @@ public class StockBuilder {
         stock.setSector(sector);
         return this;
     }
-    public StockBuilder industry(String industry) {
-        stock.setIndustry(industry);
-        return this;
-    }
+
     public StockBuilder price(Double price) {
         stock.setPrice(price);
         return this;

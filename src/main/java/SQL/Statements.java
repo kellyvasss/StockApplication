@@ -4,7 +4,7 @@ public final class Statements {
 
     static final class DimStock {
         static final String insertDimStock = "INSERT INTO dim_stock(symbol,name,description,"
-                + "market_id,country_id,sector_id,currency_id) "
+                + "market_id,country_id,sector_id,currency_id)\n "
                 + "VALUES(?,?,?,?,?,?,?)";
         static final String selectID = "SELECT id FROM dim_stock WHERE symbol=?";
         static final String count = "SELECT COUNT(*) id FROM dim_stock;";
@@ -105,6 +105,7 @@ public final class Statements {
                 + "JOIN dim_stock d ON fout.stock_id = d.id \n"
                 + "JOIN fact_transaction_in fin ON fout.buy_id = fin.id \n"
                 + "WHERE fout.user_id = ?;";
+        static final String isExisting = "SELECT id FROM fact_transaction_in WHERE user_id=? AND stock_id=?;";
 
 
         static final String create = "CREATE TABLE IF NOT EXISTS fact_transaction_in (\n"
@@ -164,15 +165,6 @@ public final class Statements {
                 + "WHERE user_id = ? AND stock_id = ?;";
         static final String isAllowedSell = "SELECT quantity q FROM fact_transaction_in WHERE user_id = ? AND stock_id = ?";
         static final String getCashToUse = "SELECT cash FROM dim_user WHERE id = ?";
-
-        // visar utveckling i procent för allt
-        static final String selectGrowthProcentAll = "SELECT (price - (CAST(approxValue AS REAL) / quantity)) / price AS r\n" +
-                "FROM fact_transaction_in\n" +
-                "WHERE user_id = ?;";
-        // visar utvecklingen i procent för en
-        static final String selectGrowthProcentOne = "SELECT (price - (CAST(approxValue AS REAL) / quantity)) / price AS r\n" +
-                "FROM fact_transaction_in\n" +
-                "WHERE user_id = ? AND stock_id = ?;";
 
 
 

@@ -7,7 +7,6 @@ public class Stock {
     private String exchange;
     private String currency;
     private String sector;
-    private String industry;
     private String country;
     private String date;
     private Double  price;
@@ -19,7 +18,6 @@ public class Stock {
                 + "\nSymbol: " + symbol
                 + "\nExchange: " + exchange
                 + "\nSector: " + sector
-                + "\nIndustry: " + industry
                 + "\nCountry: " + country
                 + "\nCurrency: " + currency
                 + "\nDescription:\n" + splitDesc(description, 6);
@@ -71,20 +69,9 @@ public class Stock {
     public void setSector(String sector) {
         this.sector = sector;
     }
-
-    public String getIndustry() {
-        return industry;
-    }
-
-
-    public void setIndustry(String industry) {
-        this.industry = industry;
-    }
-
     public Double getPrice() {
         return price;
     }
-
     public void setPrice(Double price) {
         this.price = price;
     }

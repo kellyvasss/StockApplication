@@ -31,7 +31,7 @@ public class AlphaVantage {
     // KLAR
     public Stock companyOverview(String symbol) {
         String function = "OVERVIEW";
-        String url = base_url + function + "&symbol=" + symbol + "&apikey=$" ;//+ key;
+        String url = base_url + function + "&symbol=" + symbol + "&apikey=" + key;
         Request request = new Request.Builder()
                 .url(url)
                 .get()
@@ -49,7 +49,6 @@ public class AlphaVantage {
                         .currency(jsonNode.get("Currency").asText())
                         .country(jsonNode.get("Country").asText())
                         .sector(jsonNode.get("Sector").asText())
-                        .industry(jsonNode.get("Industry").asText())
                         .price(jsonNode.get("AnalystTargetPrice").asDouble())
                         .build();
                 return stock;
@@ -92,52 +91,6 @@ public class AlphaVantage {
                 Object[] r = {str,price,symbol};
                 return r;
 
-            } else {
-                throw new IOException("Wrong symbol");
-            }
-        } catch (IOException e) {
-            return null;
-        }
-    }
-
-    // sparar alla pris och datum för sökningen. KLAR
-    public ArrayList<Stock> timeSeriesDailyAdjusted(String symbol) {
-        String function = "TIME_SERIES_DAILY_ADJUSTED";
-        String url = base_url + function + "&symbol=" + symbol + "&apikey=$";// + key;
-
-        Request request = new Request.Builder()
-                .url(url)
-                .get()
-                .build();
-
-        try (Response response = client.newCall(request).execute()) {
-            if (response.isSuccessful()) {
-                String json = response.body().string();
-
-                ObjectMapper objectMapper = new ObjectMapper();
-                JsonNode jsonNode = objectMapper.readTree(json);
-
-                ArrayList<Stock> stocks = new ArrayList<>();
-
-                JsonNode timeSeriesNode = jsonNode.get("Time Series (Daily)");
-                if (timeSeriesNode != null) {
-                    Iterator<Map.Entry<String, JsonNode>> iterator = timeSeriesNode.fields();
-                    while (iterator.hasNext()) {
-                        Map.Entry<String, JsonNode> entry = iterator.next();
-                        String date = entry.getKey();
-                        JsonNode dateData = entry.getValue();
-                        if (dateData != null && dateData.has("5. adjusted close")) {
-                            String adjustedClose = dateData.get("5. adjusted close").asText();
-                            Stock stock = new StockBuilder()
-                                    .date(date)
-                                    .price(Double.valueOf(adjustedClose))
-                                    .symbol(symbol)
-                                    .build();
-                            stocks.add(stock);
-                        }
-                    }
-                }
-                return stocks;
             } else {
                 throw new IOException("Wrong symbol");
             }
