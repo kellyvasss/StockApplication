@@ -2,27 +2,22 @@ package api;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-import org.json.JSONObject;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import stock.Market;
 import stock.MarketBuilder;
 import stock.Stock;
 import stock.StockBuilder;
-
-
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+
+
 
 public class AlphaVantage {
     private String key = "";
     private OkHttpClient client;
-    //private String function = "";
     private String base_url = "https://www.alphavantage.co/query?function=";
-    // Ta in keyReader och kalla på metod för att få fram nyckel
+
     public AlphaVantage(String key) {
         this.key = key;
         client = new OkHttpClient();
@@ -61,7 +56,6 @@ public class AlphaVantage {
     }
 
     // För att få fram all information index = 0, för att få fram enbart senaste pris, index = 1
-    // För att få fram aktuell symbol, index = 2
     public Object[] quote(String symbol) {
         // Denna visar information om senaste försäljningspriset, open, high, low, antal aktier handlade, förändring
         // i pris i pengar och procent jämnfört med förgående dag.
@@ -88,7 +82,7 @@ public class AlphaVantage {
                         + "\nLatest trading day: " + get.get("07. latest trading day").asText()
                         + "\nPrevious close: " + get.get("08. previous close").asText();
                 Double price = get.get("05. price").asDouble();
-                Object[] r = {str,price,symbol};
+                Object[] r = {str,price};
                 return r;
 
             } else {

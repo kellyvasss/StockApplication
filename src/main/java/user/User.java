@@ -10,9 +10,6 @@ public class User {
     public String getPerson_id() {
         return person_id;
     }
-    public void setPerson_id(String person_id) {
-        this.person_id = person_id;
-    }
     public String getPassword() {
         return password;
     }
@@ -25,11 +22,6 @@ public class User {
     public void setPasSalt(String pasSalt) {
         this.pasSalt = pasSalt;
     }
-
-    public String getCash() {
-        return cash;
-    }
-
     public void setCash(String cash) {
         this.cash = cash;
     }
