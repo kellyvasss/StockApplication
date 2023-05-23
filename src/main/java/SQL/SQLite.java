@@ -6,6 +6,7 @@ import user.User;
 import java.sql.*;
 import java.util.ArrayList;
 
+
 public class SQLite {
     Connection conn = null;
     String dbName = "";
