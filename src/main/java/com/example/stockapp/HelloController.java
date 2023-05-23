@@ -101,20 +101,17 @@ public class HelloController {
         // Vi börjar med att kontrollera att användarens input är tio siffror (personnummer)
         if(NumberValidator.isNumeric(userNumber) && NumberValidator.isLenTen(userNumber)) {
             try {
-                setAlert("try", "try");
                 user = sqLite.getUser(userNumber); //stämmer inputen kollar vi om usern finns i databasen eller ej
                 checkPassword(password); // kontrollera att lösenordet stämmer
 
                 // Catchar att usern inte finns i databasen
                 // Måste validera att personnummert är korrekt
             } catch (RuntimeException e) {
-                setAlert("catch", "innuti catch");
 
                 // Nummret är ett giltligt svenskt personnummer
                 // Lägg till i databasen och lägg till lösenordet och salt
                 if(NumberValidator.controllID(NumberValidator.toIntArray(userNumber))) {
                     System.out.println(NumberValidator.controllID(NumberValidator.toIntArray(userNumber)));
-                    setAlert("nummret stämmer", "1");
                     user = new User(userNumber);
                     user.setPasSalt(Hasher.generateSalt().toString());
                     user.setPassword(Hasher.hash(password, ByteSource.Util.bytes(user.getPasSalt())));
@@ -131,8 +128,8 @@ public class HelloController {
                 }
             }
         } else {
-            System.out.println(NumberValidator.controllID(NumberValidator.toIntArray(userNumber)));
-            setAlert("catch", "catch");
+           // System.out.println(NumberValidator.controllID(NumberValidator.toIntArray(userNumber)));
+            setAlert("Unvalid personnumber", "You have passed an unvalid personnumber, too many OR few digits OR letters");
         }
     }
     private void updateUserStatus() {
