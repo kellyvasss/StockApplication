@@ -33,7 +33,7 @@ går att ändra till SEK / EUR.
 
 PRO TIP: 
 
-1. API nycklen kan med största sannolikhet bytas ut mot "?" (Istället för "key" sätter du alltså ett "?")
+1. API nycklen kan med största sannolikhet bytas ut mot "$" (Istället för "key" sätter du alltså ett "$")
 2. För att logga in med ett "ogiltligt personnummer", testa "0000000000", "2222222222" och liknande kombinationer. Detta finns ingen spärr för ännu
 3. Går du minus, logga in i databasen manuellt och ändra :D
 
